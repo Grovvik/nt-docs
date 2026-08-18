@@ -138,7 +138,7 @@ const getLayerBadgeColor = (layer: string) => {
           </div>
 
           <div v-if="item.physicalLocation" class="term-structure-box location-box">
-            <span class="meta-label">📍 Физическое размещение:</span>
+            <span class="meta-label">Где находится:</span>
             <span class="meta-location-text">{{ item.physicalLocation }}</span>
           </div>
 

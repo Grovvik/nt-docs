@@ -211,7 +211,7 @@ const getLayerBadgeColor = (layer: string) => {
           </div>
 
           <div v-if="item.physicalLocation" class="popover-meta-row location-row">
-            <span class="meta-label">📍 Физическое размещение:</span>
+            <span class="meta-label">Физическое размещение:</span>
             <span class="meta-location-text">{{ item.physicalLocation }}</span>
           </div>
 
