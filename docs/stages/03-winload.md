@@ -373,7 +373,6 @@ NTSTATUS OslExecuteTransition(VOID)
 >
 
 ```c
-// Источник: source/winload.efi/OslArchTransferToKernel_180167E80.c
 void OslArchTransferToKernel(PLOADER_PARAMETER_BLOCK LoaderBlock, PVOID KernelEntryPoint)
 {
   unsigned __int64 cr4_val;

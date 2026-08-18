@@ -6,7 +6,7 @@
 
 ## 4.1 Архитектура Phase 0
 
-На этапе Phase 0 ядро переходит из первичного окружения загрузчика в штатное исполнительное окружение ядра NT (Ring 0 / Supervisor Mode):
+На этапе Phase 0 ядро переходит из первичного окружения загрузчика в полноценное исполнительное окружение ядра NT (Ring 0 / Supervisor Mode):
 
 ```
 [ winload.efi: OslArchTransferToKernel ]
@@ -66,7 +66,6 @@
 >
 
 ```c
-// Источник: source/ntoskrnl.exe/Ki/KiSystemStartup_14098C010.c
 void __noreturn KiSystemStartup(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   PKPRCB Prcb;
