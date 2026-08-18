@@ -1,6 +1,6 @@
-# 2. Windows Boot Manager (`bootmgr.efi`)
+# 2. Windows Boot Manager (`bootmgfw.efi`)
 
-Диспетчер загрузки Windows (<Term term="BCD">Boot Manager</Term> — `bootmgr.efi` / `bootmgfw.efi`) — это независимое 64-битное приложение <Term term="UEFI">UEFI</Term>, отвечающее за разбор базы конфигурации <Term term="BCD">BCD</Term>, аппаратную безопасность (<Term term="FVE">BitLocker</Term>, <Term term="TPM">TPM</Term>, <Term term="VBS">Secure Boot</Term>), выбор операционной системы и запуск загрузчика ядра `winload.efi`.
+Диспетчер загрузки Windows (<Term term="BCD">Boot Manager</Term> - `bootmgfw.efi`) это независимое 64-битное приложение <Term term="UEFI">UEFI</Term>, отвечающее за разбор базы конфигурации <Term term="BCD">BCD</Term>, аппаратную безопасность (<Term term="FVE">BitLocker</Term>, <Term term="TPM">TPM</Term>, <Term term="VBS">Secure Boot</Term>), выбор операционной системы и запуск загрузчика ядра `winload.efi`.
 
 ---
 
@@ -178,7 +178,7 @@ NTSTATUS __fastcall BmMain(PBOOT_APPLICATION_PARAMETER_BLOCK BootAppParameters)
       }
     }
 
-    // Если последовательность не задана — опрос выбранной записи или показ меню выбора ОС
+    // Если последовательность не задана, то происходит опрос или показ меню выбора ОС
     if ( !BootSequenceList || SequenceIndex >= SequenceCount )
     {
       Status = BmpGetSelectedBootEntry(BcdStoreHandle, &SelectedEntry, &TargetBootGuid, &DisplayMenu);

@@ -1,6 +1,6 @@
 # 8. User Session & Shell (`winlogon.exe`, `userinit.exe`, `explorer.exe`)
 
-Финальный этап загрузки Windows — создание интерактивной сессии пользователя (Сессия 1+), аутентификация через <Term term="LSASS">LSASS</Term>, загрузка профиля и запуск графической оболочки <Term term="EXPLORER">explorer.exe</Term>.
+Финальный этап загрузки Windows это создание интерактивной сессии пользователя (Сессия 1+), аутентификация через <Term term="LSASS">LSASS</Term>, загрузка профиля и запуск графической оболочки <Term term="EXPLORER">explorer.exe</Term>.
 
 ---
 
@@ -769,7 +769,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
       PostMessageW(v_hwndTray, 0x590u, 1u, 0);
       EnsureTabletButtonThreadRunningIfNeeded();
 
-      // [10] Запуск SHDesktopMessageLoop — обработка оконных сообщений, трея и горячих клавиш
+      // [10] Запуск SHDesktopMessageLoop для обработки оконных сообщений, трея и горячих клавиш
       SHDesktopMessageLoop(hDesktopAndTray);
       SHCloseDesktopHandle(hDesktopAndTray, nullptr, nullptr, 0);
       WriteCleanShutdown(1);

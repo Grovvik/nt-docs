@@ -1,6 +1,6 @@
 # 6. Session Manager Subsystem (`smss.exe`)
 
-Диспетчер сессий (<Term term="SMSS">smss.exe</Term>) — первый процесс пользовательского режима (Ring 3), запускаемый ядром. Он работает в качестве Native-приложения NT (только `ntdll.dll` без подсистемы Win32), настраивает виртуальную память и создаёт изолированные сессии.
+Диспетчер сессий (<Term term="SMSS">smss.exe</Term>) это первый процесс пользовательского режима (Ring 3), запускаемый ядром. Он работает в качестве Native-приложения NT (только `ntdll.dll` без подсистемы Win32), настраивает виртуальную память и создаёт изолированные сессии.
 
 ---
 
@@ -337,7 +337,7 @@ LABEL_RECORD_LOG:
     pNextDesc = (PVOID *)*pCurrentDesc;
     pCurrentDesc = pNextDesc;
 
-    // Аппаратная защита списка LIST_ENTRY: при повреждении указателей — немедленный fastfail
+    // Аппаратная защита списка LIST_ENTRY, при повреждении указателей делает немедленный fastfail
     if ( pNextDesc[1] != pTempDesc || (ppPrevDesc = (PVOID **)pTempDesc[1], *ppPrevDesc != pTempDesc) )
       __fastfail(FAST_FAIL_CORRUPT_LIST_ENTRY);
 
@@ -346,7 +346,7 @@ LABEL_RECORD_LOG:
     SmpDeallocSavedRegistryEntry(pTempDesc);
   }
 
-  // [4] Если в реестре нет дескрипторов — очистка устаревших файлов
+  // [4] Если в реестре нет дескрипторов, то происходит очистка устаревших файлов
   if ( !SmpNumberOfPagefileDescriptors && !SmpRegistrySpecifierPresent )
   {
     SmpCleanupStalePageFiles();
@@ -382,7 +382,7 @@ LABEL_RECORD_LOG:
       goto LABEL_CREATE_SWAPFILE;
   }
 
-  // [7] Если основной pagefile не создался — выделение аварийного файла подкачки (Emergency Paging File)
+  // [7] Если основной pagefile не создался, то происходит выделение аварийного файла подкачки
   if ( (int)SmpCreateEmergencyPagingFile() >= 0 )
   {
 LABEL_CREATE_SWAPFILE:
@@ -576,7 +576,7 @@ LABEL_HANDLE_READY:
           _InterlockedOr((volatile signed __int32 *)pControlBlock, 1u);
         goto LABEL_DESTROY_AND_EXIT;
       }
-      // Ошибка создания процесса — аварийное завершение и закрытие дескрипторов
+      // Если возникнет ошибка создания процесса, то произойдет аварийное завершение и закрытие дескрипторов
       NtTerminateProcess(hProcess, queryStatus);
       NtClose(hProcess);
       NtClose(hThread);
