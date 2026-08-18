@@ -492,7 +492,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     fullName: 'Interrupt Request Level (Уровень приоритета прерываний ядра)',
     layer: 'Ring 0 (Kernel/HAL)',
     category: 'CPU & Architecture',
-    summary: 'Аппаратный/программный приоритет выполнения потока или обработчика прерываний в ядре Windows (от PASSIVE_LEVEL=0 до HIGH_LEVEL=15).',
+    summary: 'Аппаратный/программный приоритет выполнения потока или обработчика прерываний в ядре Windows (от PASSIVE_LEVEL=0 до HIGH_LEVEL=15 в x64; в устаревшем 32-битном x86 верхний предел составлял 31).',
     details: 'Определяет, какие прерывания замаскированы. При IRQL >= DISPATCH_LEVEL (2) запрещено обращение к выгружаемой (paged) памяти и блокирующие ожидания (KeWaitForSingleObject).',
     structureOrRegister: 'CR8 (Task Priority Register / TPR в x64) / KeGetCurrentIrql',
     relatedTerms: ['DPC', 'APC', 'IDT', 'KPCR']
