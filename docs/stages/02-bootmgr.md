@@ -45,7 +45,7 @@ Boot Manager собран на базе библиотеки <Term term="BOOTLIB
 
 <FunctionCard 
   name="BmMain"
-  module="bootmgr.efi"
+  module="bootmgfw.efi"
   :exported="true"
   prototype="NTSTATUS __fastcall BmMain(PBOOT_APPLICATION_PARAMETER_BLOCK BootAppParameters)"
   irql="UEFI Context"
@@ -55,7 +55,7 @@ Boot Manager собран на базе библиотеки <Term term="BOOTLIB
 
 <DecompiledCode 
   name="BmMain"
-  module="bootmgr.efi"
+  module="bootmgfw.efi"
   callingConvention="__fastcall"
   :isExported="true"
   summary="Главная функция Boot Manager: инициализация BootLib, чтение BCD, проверка TPM/BitLocker и диспетчеризация запуска"
@@ -245,7 +245,7 @@ CleanupAndExit:
 
 <FunctionCard 
   name="BmOpenDataStore"
-  module="bootmgr.efi"
+  module="bootmgfw.efi"
   :exported="false"
   prototype="NTSTATUS __fastcall BmOpenDataStore(PHANDLE DataStoreHandle)"
   irql="UEFI Context"
@@ -255,7 +255,7 @@ CleanupAndExit:
 
 <DecompiledCode 
   name="BmOpenDataStore"
-  module="bootmgr.efi"
+  module="bootmgfw.efi"
   callingConvention="__fastcall"
   :isExported="false"
   summary="Сборка полного пути к файлу BCD на ESP-разделе и открытие хранилища через BcdOpenStoreFromFile"
@@ -340,7 +340,7 @@ Cleanup:
 
 <FunctionCard 
   name="BmGetBootSequence"
-  module="bootmgr.efi"
+  module="bootmgfw.efi"
   :exported="false"
   prototype="NTSTATUS __fastcall BmGetBootSequence(HANDLE BcdStoreHandle, PGUID SequenceGuidList, ULONG SequenceCount, ULONG Flags, PBOOT_APPLICATION_ENTRY **BootEntryList, PULONG ReturnedCount)"
   irql="UEFI Context"
@@ -350,7 +350,7 @@ Cleanup:
 
 <DecompiledCode 
   name="BmGetBootSequence"
-  module="bootmgr.efi"
+  module="bootmgfw.efi"
   callingConvention="__fastcall"
   :isExported="false"
   summary="Выделение массива и наполнение дескрипторов загрузочных записей BCD"
@@ -406,7 +406,7 @@ NTSTATUS __fastcall BmGetBootSequence(
 
 <FunctionCard 
   name="BmpPopulateBootEntryList"
-  module="bootmgr.efi"
+  module="bootmgfw.efi"
   :exported="false"
   prototype="NTSTATUS __fastcall BmpPopulateBootEntryList(HANDLE BcdStoreHandle, PGUID GuidList, ULONG EntryFlags, PBOOT_APPLICATION_ENTRY *EntryArray, PULONG EntryCount)"
   irql="UEFI Context"
@@ -416,7 +416,7 @@ NTSTATUS __fastcall BmGetBootSequence(
 
 <DecompiledCode 
   name="BmpPopulateBootEntryList"
-  module="bootmgr.efi"
+  module="bootmgfw.efi"
   callingConvention="__fastcall"
   :isExported="false"
   summary="Считывание BCD опций объекта, выделение дескриптора записи и установка параметров winload/winresume"
@@ -610,7 +610,7 @@ Cleanup:
 
 <FunctionCard 
   name="BmTransferExecution"
-  module="bootmgr.efi"
+  module="bootmgfw.efi"
   :exported="false"
   prototype="NTSTATUS __fastcall BmTransferExecution(PBOOT_APPLICATION_ENTRY BootEntry, PULONG ReturnAction, PBOOLEAN ExecutionCompleted)"
   irql="UEFI Context"
@@ -620,7 +620,7 @@ Cleanup:
 
 <DecompiledCode 
   name="BmTransferExecution"
-  module="bootmgr.efi"
+  module="bootmgfw.efi"
   callingConvention="__fastcall"
   :isExported="false"
   summary="Загрузка PE-образа winload.efi, замеры TPM, вызов точки входа и обработка статуса возврата"

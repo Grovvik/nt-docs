@@ -59,9 +59,8 @@ flowchart TD
         WL_MAIN --> WL_LDRBLK["<b>OslInitializeLoaderBlock</b><br/>LOADER_PARAMETER_BLOCK"]
 
         WL_MAIN --> WL_TRANS["<b>OslExecuteTransition</b>"]
-        WL_TRANS --> WL_PAGE["<b>OslFwpKernelSetupPhase1</b><br/>Таблицы страниц CR3"]
-        WL_TRANS --> WL_EBS["<b>ExitBootServices</b><br/>Переход владения платформой"]
-        WL_TRANS --> WL_ARCHTR["<b>OslArchTransferToKernel</b><br/>Подготовка CPU и MSR"]
+        WL_TRANS --> WL_PAGE["<b>OslFwpKernelSetupPhase1</b><br/>CR3 & ExitBootServices"]
+        WL_TRANS --> WL_ARCHTR["<b>OslArchTransferToKernel</b><br/>Контекст CPU и MSR"]
     end
 
     %% ========================================================
@@ -69,14 +68,15 @@ flowchart TD
     %% ========================================================
     subgraph S4 ["4. Kernel Phase 0 (ntoskrnl.exe)"]
         direction TB
-        K_START["<b>KiSystemStartup(LoaderBlock)</b><br/>IRQL HIGH_LEVEL (Entry)"]
+        K_START["<b>KiSystemStartup</b><br/>CR8=0 ➔ HIGH_LEVEL"]
 
         K_START --> K_GS["<b>wrmsr(MSR_GS_BASE, &KPCR)</b><br/>GS Base указывает на KPCR"]
         K_START --> K_BOOTSTR["<b>KiInitializeBootStructures</b><br/>Настройка GDT, IDT, XSave"]
 
         K_START --> K_INITK["<b>KiInitializeKernel</b><br/>KPRCB, IdleProcess, IdleThread"]
         
-        K_INITK --> K_IBP["<b>InitBootProcessor</b><br/>Координатор Phase 0"]
+        K_IBP["<b>InitBootProcessor</b><br/>Координатор Phase 0"]
+        K_INITK --> K_IBP
         K_IBP --> K_HAL0["<b>HalInitSystem(0)</b><br/>APIC и прерывания"]
         K_IBP --> K_CM0["<b>CmInitSystem0</b><br/>Куст SYSTEM"]
         K_IBP --> K_KE0["<b>KeInitSystem(0)</b><br/>Планировщик и DPC"]
@@ -142,7 +142,7 @@ flowchart TD
     subgraph S7_0 ["7. Session 0 (System Services)"]
         direction TB
         WI_MAIN["<b>wininit.exe: WinMain</b>"] --> WI_CRIT["<b>RtlSetProcessIsCritical</b><br/>Флаг критического процесса"]
-        WI_MAIN --> WI_PROCS["<b>StartSystemProcesses</b><br/>Запуск системных служб"]
+        WI_MAIN --> WI_PROCS["<b>WinInitStartUp</b><br/>Запуск служб (LSASS/SCM)"]
         WI_PROCS --> LSASS["<b>lsass.exe: LsaInitSystem</b><br/>LSA, SAM, Kerberos"]
         WI_PROCS --> SCM["<b>services.exe: SvcctrlMain</b><br/>Service Control Manager"]
         SCM --> SCM_AUTO["<b>ScAutoStartServices</b><br/>Автозапуск служб"]
@@ -157,7 +157,7 @@ flowchart TD
         WL_MAIN_ENTRY["<b>winlogon.exe: WinMain</b>"]
         WL_MAIN_ENTRY --> WL_WINSTA["<b>CreatePrimaryTerminal</b><br/>Оконная станция WinSta0"]
         WL_MAIN_ENTRY --> WL_LOGONUI["<b>LogonUI.exe</b><br/>Credential Providers (UI входа)"]
-        WL_LOGONUI --> WL_AUTH["<b>LSA / LSASS Auth</b><br/>Проверка учетных данных"]
+        WL_LOGONUI --> WL_AUTH["<b>LsaLogonUser</b><br/>Проверка учетных данных"]
         WL_AUTH --> WL_TOKEN["<b>User Logon Session</b><br/>Создание токена пользователя"]
         WL_TOKEN --> UI_LAUNCH["<b>CreateProcessAsUserW</b><br/>Запуск userinit.exe"]
 

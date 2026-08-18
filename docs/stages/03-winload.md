@@ -28,16 +28,16 @@
          │
          ▼
 [ OslExecuteTransition ] (0x180016584)
-    ├── Подготовка страничных таблиц фазы 1 OslFwpKernelSetupPhase1 (CR3 / PML4)
+    ├── Подготовка страничных таблиц фазы 1 OslFwpKernelSetupPhase1 (CR3 / PML4, вызов UEFI ExitBootServices)
     ├── Остановка протокола отладки BlBdStop() и сохранение меток производительности RDTSC
     └── Вызов низкоуровневого переключателя OslArchTransferToKernel
          │
          ▼
 [ OslArchTransferToKernel ] (0x180167E80)
     ├── Сброс процессорных кэшей wbinvd
-    ├── Загрузка дескрипторных таблиц: lgdt (&OslArchKernelGdt) и lidt (&OslArchKernelIdt)
-    ├── Настройка управляющих регистров: CR4 |= 0x680, CR0 |= 0x50020, CR8 = 0
-    ├── Активация Long Mode в MSR 0xC0000080 (IA32_EFER |= LME | NXE | SCE)
+    ├── Загрузка дескрипторных таблиц ядра: lgdt (&OslArchKernelGdt) и lidt (&OslArchKernelIdt)
+    ├── Настройка управляющих регистров: CR4 |= 0x680 (PGE, OSFXSR, OSXMMEXCPT), CR0 |= 0x50020 (NE, WP, AM), сброс CR8 = 0
+    ├── Нормализация регистров расширений в MSR 0xC0000080 (IA32_EFER |= LME | NXE | SCE)
     ├── Загрузка селектора сегмента задачи TSS: ltr ax
     └── Вызов инструкции дальнего возврата retfq в точку входа ядра KiSystemStartup
 ```
@@ -358,9 +358,9 @@ NTSTATUS OslExecuteTransition(VOID)
   module="winload.efi"
   :exported="false"
   prototype="VOID OslArchTransferToKernel(PLOADER_PARAMETER_BLOCK LoaderBlock, PVOID KernelEntryPoint)"
-  irql="x64 Ring 0 Flat Mode"
+  irql="CR8=0 (TPR=0)"
 >
-Низкоуровневая ассемблерная точка переключения контекста: сбрасывает кэши процессора через `wbinvd`, загружает регистры <Term term="GDT">GDTR</Term> и <Term term="IDT">IDTR</Term>, выставляет флаги в регистрах <Term term="CR0">CR0</Term>, <Term term="CR4">CR4</Term>, <Term term="LONG_MODE">IA32_EFER MSR</Term>, загружает селектор задачи `ltr` и выполняет инструкцию `retfq`, передавая управление функции ядра `KiSystemStartup`.
+Низкоуровневая ассемблерная точка переключения контекста: сбрасывает кэши процессора через `wbinvd`, загружает регистры <Term term="GDT">GDTR</Term> и <Term term="IDT">IDTR</Term>, настраивает регистры <Term term="CR0">CR0</Term>, <Term term="CR4">CR4</Term>, нормализует расширения <Term term="LONG_MODE">IA32_EFER MSR</Term>, сбрасывает регистр приоритета прерываний `CR8` в 0, загружает селектор задачи `ltr` и выполняет инструкцию `retfq`, передавая управление функции ядра `KiSystemStartup`.
 </FunctionCard>
 
 <DecompiledCode 
@@ -372,6 +372,7 @@ NTSTATUS OslExecuteTransition(VOID)
 >
 
 ```c
+// Источник: source/winload.efi/OslArchTransferToKernel_180167E80.c
 void OslArchTransferToKernel(PLOADER_PARAMETER_BLOCK LoaderBlock, PVOID KernelEntryPoint)
 {
   unsigned __int64 cr4_val;
@@ -387,20 +388,27 @@ void OslArchTransferToKernel(PLOADER_PARAMETER_BLOCK LoaderBlock, PVOID KernelEn
   __lidt(&OslArchKernelIdt);
 
   // [4] Настройка расширенных возможностей процессора в регистре CR4:
-  // 0x680 = CR4.OSFXSR (бит 9) | CR4.OSXMMEXCPT (бит 10) | CR4.FSGSBASE (бит 16)
+  // 0x680 = CR4.PGE (бит 7 - Page Global Enable)
+  //       | CR4.OSFXSR (бит 9 - OS Support for FXSAVE/FXRSTOR / SSE)
+  //       | CR4.OSXMMEXCPT (бит 10 - OS Support for Unmasked SIMD Exceptions)
   cr4_val = __readcr4();
   __writecr4(cr4_val | 0x680);
 
-  // [5] Включение базовых механизмов защиты и виртуальной памяти в CR0:
-  // 0x50020 = CR0.PE (бит 0) | CR0.NE (бит 5) | CR0.WP (бит 16) | CR0.PG (бит 31)
+  // [5] Включение битов защиты и выравнивания в CR0 (PE и PG уже активны в 64-битном режиме):
+  // 0x50020 = CR0.NE (бит 5 - Numeric Error / нативная обработка x87 FPU #MF)
+  //         | CR0.WP (бит 16 - Write Protect страниц только для чтения в Ring 0)
+  //         | CR0.AM (бит 18 - Alignment Mask / проверка выравнивания #AC)
   cr0_val = __readcr0();
   __writecr0(cr0_val | 0x50020);
 
-  // [6] Сброс приоритета прерываний Task Priority Register (CR8 / TPR)
+  // [6] Сброс приоритета прерываний Task Priority Register (CR8 / TPR = 0, PASSIVE_LEVEL)
+  // Ядро KiSystemStartup получает управление с CR8 = 0 и повышает IRQL до HIGH_LEVEL позже
   __writecr8(0);
 
-  // [7] Активация Long Mode и защиты страниц No-Execute (NX) в IA32_EFER MSR (0xC0000080):
-  // IA32_EFER.SCE (бит 0 - SYSCALL/SYSRET) | IA32_EFER.LME (бит 8) | IA32_EFER.NXE (бит 11)
+  // [7] Нормализация расширений архитектуры в IA32_EFER MSR (0xC0000080) для контекста ядра:
+  // IA32_EFER.SCE (бит 0 - SYSCALL/SYSRET Enable)
+  // IA32_EFER.LME (бит 8 - Long Mode Active)
+  // IA32_EFER.NXE (бит 11 - No-Execute Protection Enable)
   __writemsr(0xC0000080, __readmsr(0xC0000080) | (unsigned int)OslArchEferFlags);
 
   // [8] Загрузка селектора TSS ядра в Task Register процессора

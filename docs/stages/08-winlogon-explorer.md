@@ -839,7 +839,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 С момента подачи питания до появления рабочего стола управление было последовательно передано по цепочке:
 
-$$\text{UEFI Firmware} \longrightarrow \text{bootmgr.efi} \longrightarrow \text{winload.efi} \longrightarrow \text{ntoskrnl.exe} \longrightarrow \text{smss.exe} \longrightarrow \text{wininit.exe} \longrightarrow \text{winlogon.exe} \longrightarrow \text{explorer.exe}$$
+$$\text{UEFI Firmware} \longrightarrow \text{bootmgfw.efi} \longrightarrow \text{winload.efi} \longrightarrow \text{ntoskrnl.exe} \longrightarrow \text{smss.exe} \longrightarrow \text{wininit.exe} \longrightarrow \text{winlogon.exe} \longrightarrow \text{explorer.exe}$$
 
 Вы можете изучить:
 - **[Интерактивный глоссарий всех терминов ядра](/glossary/)**

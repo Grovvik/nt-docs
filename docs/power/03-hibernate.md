@@ -7,7 +7,7 @@
 ## 3.1 Архитектурный конвейер сохранения и восстановления снимка S4
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph HIBER_SAVE ["1. Создание снимка S4 (ntoskrnl.exe)"]
         direction TB
         H1["<b>Инициация S4</b><br/>NtSetSystemPowerState"]

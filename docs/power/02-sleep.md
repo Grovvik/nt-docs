@@ -9,7 +9,7 @@
 ## 2.1 Архитектурный конвейер перехода в сон S3 и пробуждения
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph SLEEP_TRANSITION ["1. Переход в спящий режим (Suspend)"]
         direction TB
         S1["<b>Инициация сна</b><br/>Таймаут или кнопка Power"]

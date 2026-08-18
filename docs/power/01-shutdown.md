@@ -7,7 +7,7 @@
 ## 1.1 Полный архитектурный конвейер вызовов
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph S_USER ["1. User Mode (Session 1 & Shell)"]
         direction TB
         U1["<b>explorer.exe</b><br/>Клик 'Выключение'"]
@@ -356,7 +356,7 @@ void __fastcall __noreturn PopShutdownSystem(int a1)
 
 ---
 
-## 1.6 Этап 5: Аппаратный уровень HAL и ACPI/UEFI
+## 1.6 Аппаратный уровень HAL и ACPI/UEFI
 
 1. `HalReturnToFirmware(HalPowerDownRoutine)` вызывает функцию `HaliAcpiSleep(PowerActionShutdownOff)`.
 2. Функция блокирует аппаратные прерывания (`_disable()`), останавливает вторичные ядра AP через IPI и настраивает регистры чипсета:

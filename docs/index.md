@@ -32,7 +32,7 @@ features:
    - Аппаратная инициализация чипсета, памяти и процессора (фазы <Term term="SEC">SEC</Term> -> <Term term="PEI">PEI</Term> -> <Term term="DXE">DXE</Term>).
    - Выбор устройства загрузки (<Term term="BDS">BDS</Term>), валидация ключей <Term term="Secure Boot">Secure Boot</Term> и запуск `\EFI\Microsoft\Boot\bootmgfw.efi`.
 
-2. **Windows Boot Manager (`bootmgr.efi`)**:
+2. **Windows Boot Manager (`bootmgfw.efi`)**:
    - Чтение и разбор базы конфигурации <Term term="BCD">BCD</Term>.
    - Проверка TPM и расшифровка разделов BitLocker (<Term term="FVE">Full Volume Encryption</Term>).
    - Запуск целевого загрузчика ОС `winload.efi`.
@@ -40,10 +40,10 @@ features:
 3. **Windows OS Loader (`winload.efi`)**:
    - Загрузка `ntoskrnl.exe`, `hal.dll`, куста `SYSTEM` и драйверов типа `SERVICE_BOOT_START` (включая <Term term="ELAM">ELAM</Term>).
    - Подготовка таблиц страниц памяти (<Term term="CR3">CR3</Term> / <Term term="PTE">PTE</Term>) и структуры `LOADER_PARAMETER_BLOCK`.
-   - Вызов UEFI сервиса `ExitBootServices` и переход в ядро на `KiSystemStartup`.
+   - Завершение Boot Services прошивки (`ExitBootServices`) и переход в ядро на `KiSystemStartup`.
 
 4. **Kernel Phase 0 (<Term term="ntoskrnl">ntoskrnl.exe</Term>)**:
-   - Выполняется на главном процессоре (BSP) при отключенных прерываниях (<Term term="IRQL">IRQL HIGH_LEVEL</Term>).
+   - Выполняется на главном процессоре (BSP): ранний старт с CR8=0 с последующим повышением до <Term term="IRQL">IRQL HIGH_LEVEL</Term>.
    - Настройка структур <Term term="KPCR">KPCR</Term>, <Term term="KPRCB">KPRCB</Term>, <Term term="IDT">IDT</Term>, <Term term="GDT">GDT</Term>, <Term term="TSS">TSS</Term>.
    - Вызов `InitBootProcessor`: инициализация <Term term="HAL">HAL</Term>, менеджера памяти `MmInitSystem(0)`, объектов `ObInitSystem(0)`, процессов `PsInitSystem(0)`.
 
