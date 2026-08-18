@@ -39,12 +39,17 @@
 
 ## 8.2 Декомпилированный C-код функций Winlogon, Userinit и Explorer
 
+> **Целевая сборка**: Windows 10 22H2 x64 (Build `10.0.19045.2965`). Имена внутренних функций и RVA-адреса зависят от версии сборки.  
+> **Конвенция вызовов (x64 ABI)**: Аннотации конвенций вызовов (`__fastcall`, `__stdcall`, `__cdecl`) воспроизводят декораторы типов декомпилятора Hex-Rays / IDA Pro. В архитектуре Windows x64 действует единый системный Microsoft x64 ABI (передача параметров через RCX, RDX, R8, R9, выделение Shadow Space).
+
+---
+
 ### 1. Диспетчер входа: `WinMain` (`winlogon.exe`)
 
 <FunctionCard 
   name="WinMain"
   module="winlogon.exe"
-  :exported="true"
+  :exported="false"
   prototype="int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)"
   irql="Ring 3 (Win32)"
   phase="Logon Session Orchestrator"

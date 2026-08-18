@@ -46,7 +46,8 @@
 
 ## 3.2 Декомпилированный C-код функций winload.efi
 
-Все функции получены в результате декомпиляции бинарного файла `winload.efi` (Windows 10/11 x64). Имена переменных нормализованы, код структурирован и снабжен комментариями.
+> **Целевая сборка**: Windows 10 22H2 x64 (Build `10.0.19045.2965`). Имена внутренних функций и RVA-адреса зависят от версии сборки.  
+> **Конвенция вызовов (x64 ABI)**: Аннотации конвенций вызовов (`__fastcall`, `__stdcall`) воспроизводят декораторы типов декомпилятора Hex-Rays / IDA Pro. В архитектуре Windows x64 действует единый системный Microsoft x64 ABI (передача параметров через RCX, RDX, R8, R9, выделение Shadow Space).
 
 ---
 
@@ -55,7 +56,7 @@
 <FunctionCard 
   name="OslMain"
   module="winload.efi"
-  :exported="true"
+  :exported="false"
   prototype="NTSTATUS __fastcall OslMain(PBOOT_APPLICATION_PARAMETER_BLOCK BootAppParameters)"
   irql="UEFI Context"
 >
