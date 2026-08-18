@@ -1,0 +1,152 @@
+/* Custom Kernel Theme styling */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500&display=swap');
+
+:root {
+  --vp-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --vp-font-family-mono: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+
+  /* Brand Colors - Light Mode */
+  --vp-c-brand-1: #0284c7;
+  --vp-c-brand-2: #0369a1;
+  --vp-c-brand-3: #075985;
+  --vp-c-brand-soft: rgba(2, 132, 199, 0.1);
+
+  /* Light theme background & surface tokens */
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #f8fafc;
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-bg-soft: #f1f5f9;
+
+  --vp-c-border: #e2e8f0;
+  --vp-c-divider: #e2e8f0;
+
+  --vp-c-text-1: #0f172a;
+  --vp-c-text-2: #475569;
+  --vp-c-text-3: #94a3b8;
+}
+
+.dark {
+  /* Brand Colors - Dark Mode */
+  --vp-c-brand-1: #38bdf8;
+  --vp-c-brand-2: #0284c7;
+  --vp-c-brand-3: #0369a1;
+  --vp-c-brand-soft: rgba(56, 189, 248, 0.12);
+
+  /* Neutral dark backgrounds without bluish tint */
+  --vp-c-bg: #121214;
+  --vp-c-bg-alt: #18181b;
+  --vp-c-bg-elv: #202023;
+  --vp-c-bg-soft: #27272a;
+
+  --vp-c-border: rgba(255, 255, 255, 0.08);
+  --vp-c-divider: rgba(255, 255, 255, 0.08);
+
+  --vp-c-text-1: #f4f4f5;
+  --vp-c-text-2: #a1a1aa;
+  --vp-c-text-3: #71717a;
+}
+
+/* Headings font and thinner weight */
+h1, h2, h3, h4, h5, h6,
+.vp-doc h1, .vp-doc h2, .vp-doc h3, .vp-doc h4, .vp-doc h5, .vp-doc h6 {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 500 !important;
+}
+
+/* Global rule to keep font weights <= 500 */
+strong, b, .vp-doc strong, .vp-doc b,
+.VPNavBarTitle, .VPSidebarItem .text,
+.vp-doc th, .VPButton, .name, .title {
+  font-weight: 500 !important;
+}
+
+/* Hero Title */
+.VPHero .name {
+  color: var(--vp-c-text-1) !important;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  filter: none !important;
+  font-weight: 500 !important;
+}
+
+.VPHero .text, .VPHero .tagline {
+  font-weight: 400 !important;
+}
+
+/* Code blocks styling */
+.vp-doc pre {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+}
+
+.vp-doc code {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 400;
+}
+
+/* Callout alerts */
+.custom-block.tip,
+.custom-block.info {
+  border-color: var(--vp-c-brand-1) !important;
+  background-color: var(--vp-c-brand-soft) !important;
+}
+
+.custom-block.warning {
+  border-color: #f59e0b !important;
+  background-color: rgba(245, 158, 11, 0.08) !important;
+}
+
+.custom-block.danger {
+  border-color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+/* Table styling */
+.vp-doc table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 13.5px;
+}
+
+.vp-doc th {
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-brand-1);
+  font-weight: 500 !important;
+  border: 1px solid var(--vp-c-border);
+  padding: 10px 14px;
+}
+
+.vp-doc td {
+  border: 1px solid var(--vp-c-divider);
+  padding: 10px 14px;
+}
+
+.vp-doc tr:nth-child(2n) {
+  background-color: var(--vp-c-bg-soft);
+}
+
+/* Responsive layout for pages without aside (e.g. Glossary) to prevent sidebar overlap */
+.VPDoc:not(.has-aside) .container {
+  max-width: 100% !important;
+}
+
+.VPDoc:not(.has-aside) .container > .content {
+  max-width: 100% !important;
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+}
+
+@media (max-width: 768px) {
+  .VPDoc:not(.has-aside) .container > .content {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+.VPDoc:not(.has-aside) .content-container {
+  max-width: 100% !important;
+}
+
+
