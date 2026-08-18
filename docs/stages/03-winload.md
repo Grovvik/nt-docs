@@ -406,9 +406,10 @@ void OslArchTransferToKernel(PLOADER_PARAMETER_BLOCK LoaderBlock, PVOID KernelEn
   // Ядро KiSystemStartup получает управление с CR8 = 0 и повышает IRQL до HIGH_LEVEL позже
   __writecr8(0);
 
-  // [7] Нормализация расширений архитектуры в IA32_EFER MSR (0xC0000080) для контекста ядра:
-  // IA32_EFER.SCE (бит 0 - SYSCALL/SYSRET Enable)
-  // IA32_EFER.LME (бит 8 - Long Mode Enable; процессор уже исполняет x64 код с аппаратным LMA=1)
+  // [7] Нормализация EFER для контекста ядра (SCE/LME/NXE должны быть установлены;
+  // процессор к этому моменту уже работает в IA-32e mode с аппаратным флагом LMA=1):
+  // IA32_EFER.SCE (бит 0 - System Call Extensions / SYSCALL & SYSRET)
+  // IA32_EFER.LME (бит 8 - Long Mode Enable / разрешение IA-32e)
   // IA32_EFER.NXE (бит 11 - No-Execute Protection Enable)
   __writemsr(0xC0000080, __readmsr(0xC0000080) | (unsigned int)OslArchEferFlags);
 
