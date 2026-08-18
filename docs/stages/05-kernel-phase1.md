@@ -61,16 +61,16 @@ char __fastcall Phase1InitializationDiscard(ULONG_PTR LoaderBlock)
   PVOID Object, MappedBase;
   ULONG_PTR ViewSize;
 
-  // 1. Создание символической ссылки \SystemRoot на загрузочный раздел диска
+  // [1] Создание символической ссылки \SystemRoot на загрузочный раздел диска
   if ( CreateSystemRootLink(LoaderBlock) < 0 )
     KeBugCheck(0x64u); // SYMBOLIC_INITIALIZATION_FAILED
 
-  // 2. Инициализация Менеджера Памяти Mm (Phase 1)
+  // [2] Инициализация Менеджера Памяти Mm (Phase 1)
   // Создание рабочих наборов (Working Sets), кэша адресов, поддержка файлов подкачки
   if ( !(unsigned __int8)MmInitSystem(1, LoaderBlock) )
     KeBugCheck(0x65u); // MEMORY1_INITIALIZATION_FAILED
 
-  // 3. Создание разделяемой секции NLS-таблиц для всех процессов юзермода
+  // [3] Создание разделяемой секции NLS-таблиц для всех процессов юзермода
   if ( InitNlsTableSize )
   {
     MaximumSize.QuadPart = InitNlsTableSize;
@@ -86,27 +86,27 @@ char __fastcall Phase1InitializationDiscard(ULONG_PTR LoaderBlock)
     InitNlsTableBase = MappedBase;
   }
 
-  // 4. Инициализация Диспетчера Кэша (Cache Manager - Cc)
+  // [4] Инициализация Диспетчера Кэша (Cache Manager - Cc)
   if ( !(unsigned __int8)CcInitializeCacheManager() )
     KeBugCheck(0x66u); // CACHE_INITIALIZATION_FAILED
 
-  // 5. Инициализация Менеджера Конфигурации (Реестр - Cm Phase 1)
+  // [5] Инициализация Менеджера Конфигурации (Реестр - Cm Phase 1)
   if ( !(unsigned __int8)CmInitSystem1(LoaderBlock) )
     KeBugCheck(0x67u); // CONFIG_INITIALIZATION_FAILED
 
-  // 6. Инициализация Superfetch / SysMain (PfInitializeSuperfetch)
+  // [6] Инициализация Superfetch / SysMain (PfInitializeSuperfetch)
   PfInitializeSuperfetch();
 
-  // 7. Инициализация файловых систем (FsRtlInitSystem)
+  // [7] Инициализация файловых систем (FsRtlInitSystem)
   if ( !(unsigned __int8)FsRtlInitSystem() )
     KeBugCheck(0x68u); // FILE_SYSTEM_INITIALIZATION_FAILED
 
-  // 8. Инициализация Plug and Play (PnP) и I/O Manager
+  // [8] Инициализация Plug and Play (PnP) и I/O Manager
   // Диспетчер PnP находит устройства шин PCIe/USB/NVMe и вызывает DriverEntry драйверов
   if ( !(unsigned __int8)PpInitSystem() )
     KeBugCheck(0x90u); // PNP_INITIALIZATION_FAILED
 
-  // 9. Инициализация LPC / ALPC подсистемы IPC
+  // [9] Инициализация LPC / ALPC подсистемы IPC
   if ( !(unsigned __int8)LpcInitSystem() )
     KeBugCheck(0x6Au); // LPC_INITIALIZATION_FAILED
 
@@ -177,20 +177,20 @@ void StartFirstUserProcess()
   RtlCopyUnicodeString((PUNICODE_STRING)(v4 + 56), &stru_140D24928);
   RtlCopyUnicodeString((PUNICODE_STRING)v4 + 6, &NtInitialUserProcess);
 
-  // 1. Создание процесса smss.exe в пространстве Ring 3
+  // [1] Создание процесса smss.exe в пространстве Ring 3
   UserProcess = (int)RtlCreateUserProcessEx((int)v4 + 96, (_DWORD)v4, 0, 0, (__int64)Handles);
 
-  // 2. Отключение анимации загрузочного логотипа Inbv
+  // [2] Отключение анимации загрузочного логотипа Inbv
   if ( InbvIsBootDriverInstalled() )
     FinalizeBootLogo();
 
   if ( (UserProcess & 0x80000000) != 0LL )
     KeBugCheckEx(0x6Du, UserProcess, 0, 1u, 0); // PROCESS1_INITIALIZATION_FAILED
 
-  // 3. Запуск первого потока процесса smss.exe
+  // [3] Запуск первого потока процесса smss.exe
   ZwResumeThread(Handles[1], NULL);
 
-  // 4. Очистка временных ресурсов и переход системного потока в сон
+  // [4] Очистка временных ресурсов и переход системного потока в сон
   Interval.QuadPart = -50000000; // 5 секунд
   KeDelayExecutionThread(0, 0, &Interval);
 

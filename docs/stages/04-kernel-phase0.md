@@ -213,40 +213,40 @@ __int64 __fastcall InitBootProcessor(__int64 a1)
   ExpValidateLoader();
   ExpInitLicensing((__int64)&PspHostSiloGlobals);
 
-  // 1. Инициализация таблиц NLS (кодировки символов UTF-16, ANSI, OEM)
+  // [1] Инициализация таблиц NLS (кодировки символов UTF-16, ANSI, OEM)
   RtlInitNlsTables(v18, v17, v16);
   RtlResetRtlTranslations();
 
-  // 2. Инициализация архитектуры WHEA (Windows Hardware Error Architecture)
+  // [2] Инициализация архитектуры WHEA (Windows Hardware Error Architecture)
   WheaInitializeServices();
 
-  // 3. Инициализация слоя аппаратных абстракций HAL (Phase 0)
+  // [3] Инициализация слоя аппаратных абстракций HAL (Phase 0)
   LODWORD(InitializationPhase) = 0;
   v20 = (unsigned int)InitializationPhase;
   if ( !(unsigned __int8)HalInitSystem(v20, a1) )
     KeBugCheck(0x5Cu); // HAL_INITIALIZATION_FAILED
 
-  // 4. Инициализация системного таймера и счетчиков тактов
+  // [4] Инициализация системного таймера и счетчиков тактов
   v21 = (unsigned int)InitializationPhase;
   KeInitializeClock(v21);
 
-  // 5. Первичная инициализация куста реестра SYSTEM
+  // [5] Первичная инициализация куста реестра SYSTEM
   CmInitSystem0(a1);
 
-  // 6. Инициализация планировщика ядра (DPC очереди, приоритеты, кванты)
+  // [6] Инициализация планировщика ядра (DPC очереди, приоритеты, кванты)
   if ( !(unsigned __int8)KeInitSystem(0) )
     KeBugCheckEx(0x31u, 0xFFFFFFFFC0000001uLL, 0xBu, 0, 0);
 
-  // 7. Построение системного корня (C:\Windows -> \SystemRoot)
+  // [7] Построение системного корня (C:\Windows -> \SystemRoot)
   v22 = RtlStringCbPrintfA(pszDest, 0x100u, "C:%s", *(const char **)(a1 + 200));
   HostNtSystemRoot = (UNICODE_STRING *)RtlGetHostNtSystemRoot();
   RtlAnsiStringToUnicodeString(HostNtSystemRoot, &DestinationString_8, 0);
 
-  // 8. Инициализация Executive (ExpInitSystemPhase0: пулы памяти, списки ресурсов)
+  // [8] Инициализация Executive (ExpInitSystemPhase0: пулы памяти, списки ресурсов)
   if ( !(unsigned __int8)ExInitSystem() )
     KeBugCheckEx(0x31u, 0, 0, 0, 0);
 
-  // 9. Инициализация Менеджера Памяти Mm (Phase 0)
+  // [9] Инициализация Менеджера Памяти Mm (Phase 0)
   // Создание PFN Database, NonPagedPool, PagedPool, системных PTE
   if ( !(unsigned __int8)MmInitSystem(0, a1) )
     KeBugCheck(0x31u);

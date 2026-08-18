@@ -66,45 +66,45 @@ NTSTATUS __fastcall OslMain(PBOOT_APPLICATION_PARAMETER_BLOCK BootParams)
   PLOADER_PARAMETER_BLOCK LoaderBlock;
   OSL_EXECUTION_CONTEXT Context;
 
-  // 1. Инициализация библиотеки загрузочной среды
+  // [1] Инициализация библиотеки загрузочной среды
   status = BlInitializeLibrary(BootParams, &Context.BootLibContext);
   if ( !NT_SUCCESS(status) )
     return status;
 
-  // 2. Инициализация графического буфера (Boot Video / BGFX)
+  // [2] Инициализация графического буфера (Boot Video / BGFX)
   OslInitializeDisplay();
 
-  // 3. Загрузка ядра (ntoskrnl.exe), HAL (hal.dll) и зависимостей (kdcom, mcupdate)
+  // [3] Загрузка ядра (ntoskrnl.exe), HAL (hal.dll) и зависимостей (kdcom, mcupdate)
   status = OslLoadAndInitializeKernel(&Context);
   if ( !NT_SUCCESS(status) )
     goto Cleanup;
 
-  // 4. Загрузка системного куста реестра SYSTEM
+  // [4] Загрузка системного куста реестра SYSTEM
   status = OslLoadSystemHive(&Context);
   if ( !NT_SUCCESS(status) )
     goto Cleanup;
 
-  // 5. Загрузка загрузочных драйверов (BOOT_START) и ELAM
+  // [5] Загрузка загрузочных драйверов (BOOT_START) и ELAM
   status = OslpLoadBootDrivers(&Context);
   if ( !NT_SUCCESS(status) )
     goto Cleanup;
 
-  // 6. Формирование главной структуры передачи параметров в ядро
+  // [6] Формирование главной структуры передачи параметров в ядро
   status = OslBuildKernelLoaderBlock(&Context, &LoaderBlock);
   if ( !NT_SUCCESS(status) )
     goto Cleanup;
 
-  // 7. Построение виртуального адресного пространства ядра и таблиц страниц CR3
+  // [7] Построение виртуального адресного пространства ядра и таблиц страниц CR3
   status = OslpSetVirtualAddressMap(&Context, LoaderBlock);
   if ( !NT_SUCCESS(status) )
     goto Cleanup;
 
-  // 8. Отключение UEFI Boot Services (ExitBootServices)
+  // [8] Отключение UEFI Boot Services (ExitBootServices)
   status = BlMmExitBootServices();
   if ( !NT_SUCCESS(status) )
     goto Cleanup;
 
-  // 9. Переход в ядро: загрузка CR3, настройка GDTR/IDTR и jump в KiSystemStartup
+  // [9] Переход в ядро: загрузка CR3, настройка GDTR/IDTR и jump в KiSystemStartup
   OslArchTransferToKernel(LoaderBlock, (PVOID)LoaderBlock->KernelStack);
 
 Cleanup:
@@ -143,7 +143,7 @@ NTSTATUS __fastcall OslLoadAndInitializeKernel(POSL_EXECUTION_CONTEXT Context)
   NTSTATUS status;
   PVOID KernelBase, HalBase, KdComBase;
 
-  // 1. Считывание ntoskrnl.exe
+  // [1] Считывание ntoskrnl.exe
   status = OslpLoadModule(
               Context->SystemDeviceId,
               L"\\Windows\\system32\\ntoskrnl.exe",
@@ -155,7 +155,7 @@ NTSTATUS __fastcall OslLoadAndInitializeKernel(POSL_EXECUTION_CONTEXT Context)
   if ( !NT_SUCCESS(status) )
     return status;
 
-  // 2. Считывание hal.dll (Hardware Abstraction Layer)
+  // [2] Считывание hal.dll (Hardware Abstraction Layer)
   status = OslpLoadModule(
               Context->SystemDeviceId,
               L"\\Windows\\system32\\hal.dll",
@@ -167,13 +167,13 @@ NTSTATUS __fastcall OslLoadAndInitializeKernel(POSL_EXECUTION_CONTEXT Context)
   if ( !NT_SUCCESS(status) )
     return status;
 
-  // 3. Загрузка транспортной DLL отладчика ядра (kdcom.dll / kdnet.dll)
+  // [3] Загрузка транспортной DLL отладчика ядра (kdcom.dll / kdnet.dll)
   OslpLoadModule(Context->SystemDeviceId, L"\\Windows\\system32\\kdcom.dll", &KdComBase, NULL, NULL, 0);
 
-  // 4. Загрузка микрокода процессора (mcupdate_AuthenticAMD.dll / mcupdate_GenuineIntel.dll)
+  // [4] Загрузка микрокода процессора (mcupdate_AuthenticAMD.dll / mcupdate_GenuineIntel.dll)
   OslpLoadMicrocodeUpdate(Context);
 
-  // 5. Разрешение импортов: связывание ntoskrnl.exe <-> hal.dll
+  // [5] Разрешение импортов: связывание ntoskrnl.exe <-> hal.dll
   status = BlImgResolveImports(KernelBase, HalBase);
   return status;
 }
@@ -212,7 +212,7 @@ NTSTATUS __fastcall OslpLoadBootDrivers(POSL_EXECUTION_CONTEXT Context)
 
   InitializeListHead(DriverListHead);
 
-  // 1. Поиск в реестре драйверов с Group = "Early-Launch" (ELAM)
+  // [1] Поиск в реестре драйверов с Group = "Early-Launch" (ELAM)
   status = OslpScanSystemHiveForElam(Context->SystemHiveHandle, &ElamDriver);
   if ( NT_SUCCESS(status) && ElamDriver )
   {
@@ -224,12 +224,12 @@ NTSTATUS __fastcall OslpLoadBootDrivers(POSL_EXECUTION_CONTEXT Context)
     OslpInitializeElamRegistryData(Context->SystemHiveHandle, ElamDriver);
   }
 
-  // 2. Сканирование остальных драйверов SERVICE_BOOT_START (AHCI, NVMe, StorAHCI, Wdf01000, NTFS)
+  // [2] Сканирование остальных драйверов SERVICE_BOOT_START (AHCI, NVMe, StorAHCI, Wdf01000, NTFS)
   status = OslpScanSystemHiveForBootDrivers(Context->SystemHiveHandle, DriverListHead);
   if ( !NT_SUCCESS(status) )
     return status;
 
-  // 3. Загрузка PE-образов всех найденных BOOT_START драйверов в память
+  // [3] Загрузка PE-образов всех найденных BOOT_START драйверов в память
   PLIST_ENTRY Entry = DriverListHead->Flink;
   while ( Entry != DriverListHead )
   {
@@ -292,26 +292,26 @@ NTSTATUS __fastcall OslBuildKernelLoaderBlock(
           );
   memset(Block, 0, sizeof(LOADER_PARAMETER_BLOCK));
 
-  // 1. Связывание списка загруженных модулей ядра (ntoskrnl, hal, kdcom, bootvid)
+  // [1] Связывание списка загруженных модулей ядра (ntoskrnl, hal, kdcom, bootvid)
   Block->LoadOrderListHead = Context->LoadedModuleListHead;
 
-  // 2. Список физической карты памяти (Memory Descriptor List)
+  // [2] Список физической карты памяти (Memory Descriptor List)
   Block->MemoryDescriptorListHead = Context->MemoryMapListHead;
 
-  // 3. Список BOOT_START драйверов
+  // [3] Список BOOT_START драйверов
   Block->BootDriverListHead = Context->BootDriverList;
 
-  // 4. Базовый адрес куста реестра SYSTEM в памяти
+  // [4] Базовый адрес куста реестра SYSTEM в памяти
   Block->RegistryBase = Context->SystemHiveBase;
   Block->RegistryLength = Context->SystemHiveSize;
 
-  // 5. Указатели на NLS таблицы (кодовые страницы ANSI, OEM, Unicode)
+  // [5] Указатели на NLS таблицы (кодовые страницы ANSI, OEM, Unicode)
   Block->NlsData = &Context->NlsDataBlock;
 
-  // 6. Опции командной строки загрузки (например, /DEBUG /TESTSIGNING /NOEXECUTE)
+  // [6] Опции командной строки загрузки (например, /DEBUG /TESTSIGNING /NOEXECUTE)
   Block->LoadOptions = Context->LoadOptionsString;
 
-  // 7. Расширение блока параметров (_LOADER_PARAMETER_EXTENSION) для VBS/HVCI/Hyper-V
+  // [7] Расширение блока параметров (_LOADER_PARAMETER_EXTENSION) для VBS/HVCI/Hyper-V
   Block->Extension = Context->LoaderExtensionBlock;
 
   *pLoaderBlock = Block;
@@ -353,13 +353,13 @@ NTSTATUS __fastcall BlMmExitBootServices(VOID)
   UINTN DescriptorSize;
   UINT32 DescriptorVersion;
 
-  // 1. Получение актуального ключа карты памяти (MapKey) прошивки
+  // [1] Получение актуального ключа карты памяти (MapKey) прошивки
   gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion);
   MemoryMap = (EFI_MEMORY_DESCRIPTOR *)BlMmAllocateTemporaryPages(MemoryMapSize);
   
   gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion);
 
-  // 2. Фатальный вызов ExitBootServices - уничтожение окружения UEFI
+  // [2] Фатальный вызов ExitBootServices - уничтожение окружения UEFI
   efiStatus = gBS->ExitBootServices(g_ImageHandle, MapKey);
   if ( EFI_ERROR(efiStatus) )
   {
