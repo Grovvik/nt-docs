@@ -1,6 +1,6 @@
 # 4. Kernel Phase 0 Initialization (`ntoskrnl.exe`)
 
-Фаза 0 инициализации ядра начинается при переданном загрузчиком уровне прерываний `CR8 = 0` (`PASSIVE_LEVEL`), после чего на раннем этапе `KiSystemStartup` повышает приоритет до <Term term="IRQL">IRQL HIGH_LEVEL (15)</Term>, изолируя исполнение и структуры ядра на главном процессоре (BSP).
+Фаза 0 начинается при переданном загрузчиком уровне прерываний `CR8 = 0` (`PASSIVE_LEVEL`); на раннем этапе `KiSystemStartup` повышает IRQL до <Term term="IRQL">HIGH_LEVEL (15)</Term> на главном процессоре (BSP).
 
 ---
 
@@ -50,7 +50,7 @@
   module="ntoskrnl.exe"
   :exported="false"
   prototype="VOID __noreturn KiSystemStartup(PLOADER_PARAMETER_BLOCK LoaderBlock)"
-  irql="Entry: CR8=0 ➔ HIGH_LEVEL (15)"
+  irql="Entry: CR8=0 ➔ HIGH_LEVEL (15) during early startup"
   caller="winload.efi: OslArchTransferToKernel"
   phase="Phase 0 Core Entry"
 >

@@ -44,7 +44,7 @@ flowchart LR
   module="ntoskrnl.exe"
   :exported="false"
   prototype="__int64 __fastcall PopSaveHiberContext(ULONG_PTR BugCheckParameter3)"
-  irql="HIGH_LEVEL (15/31)"
+  irql="HIGH_LEVEL (15)"
   caller="ntoskrnl.exe: PopInvokeSystemStateHandler"
   phase="Kernel Hibernation Image Serialization"
 >

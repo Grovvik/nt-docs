@@ -43,7 +43,7 @@ flowchart LR
   module="hal.dll"
   :exported="false"
   prototype="__int64 __fastcall HaliAcpiSleep(ULONG SleepState, PVOID Handler, PVOID Context, ULONG ProcessorCount, volatile signed __int32 *SyncBarrier)"
-  irql="HIGH_LEVEL (15/31)"
+  irql="HIGH_LEVEL (15)"
   caller="ntoskrnl.exe: PopInvokeSystemStateHandler"
   phase="HAL ACPI Hardware State Switch"
 >

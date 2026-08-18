@@ -310,7 +310,7 @@ void __fastcall IoShutdownSystem(int Phase)
   module="ntoskrnl.exe"
   :exported="false"
   prototype="void __fastcall __noreturn PopShutdownSystem(int Action)"
-  irql="HIGH_LEVEL (15/31)"
+  irql="HIGH_LEVEL (15)"
   caller="ntoskrnl.exe: PopGracefulShutdown"
   phase="Kernel-to-HAL Power Handoff"
 >
