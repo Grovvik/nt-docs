@@ -71,7 +71,6 @@
 >
 
 ```c
-// Источник: source/winload.efi/OslMain_180001090.c
 NTSTATUS __fastcall OslMain(PBOOT_APPLICATION_PARAMETER_BLOCK BootAppParameters)
 {
   NTSTATUS Status;
@@ -142,7 +141,6 @@ NTSTATUS __fastcall OslMain(PBOOT_APPLICATION_PARAMETER_BLOCK BootAppParameters)
 >
 
 ```c
-// Источник: source/winload.efi/OslpLoadAllModules_1800096B8.c
 NTSTATUS __fastcall OslpLoadAllModules(
     POSL_LOADER_BLOCK LoaderBlock,
     PBOOT_ENVIRONMENT_DEVICE SystemDevice)
@@ -232,7 +230,6 @@ NTSTATUS __fastcall OslpLoadAllModules(
 >
 
 ```c
-// Источник: source/winload.efi/OslInitializeLoaderBlock_180011CCC.c
 NTSTATUS __fastcall OslInitializeLoaderBlock(
     ULONG Flags,
     HANDLE SystemHiveHandle,
@@ -306,7 +303,6 @@ NTSTATUS __fastcall OslInitializeLoaderBlock(
 >
 
 ```c
-// Источник: source/winload.efi/OslExecuteTransition_180016584.c
 NTSTATUS OslExecuteTransition(VOID)
 {
   NTSTATUS Status;
@@ -376,7 +372,6 @@ NTSTATUS OslExecuteTransition(VOID)
 >
 
 ```c
-// Источник: source/winload.efi/OslArchTransferToKernel_180167E80.c
 void OslArchTransferToKernel(PLOADER_PARAMETER_BLOCK LoaderBlock, PVOID KernelEntryPoint)
 {
   unsigned __int64 cr4_val;
