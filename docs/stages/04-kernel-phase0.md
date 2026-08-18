@@ -46,7 +46,7 @@
   name="KiSystemStartup"
   module="ntoskrnl.exe"
   :exported="true"
-  prototype="NTSTATUS KiSystemStartup(PLOADER_PARAMETER_BLOCK LoaderBlock)"
+  prototype="NTSTATUS __stdcall __noreturn KiSystemStartup(PLOADER_PARAMETER_BLOCK LoaderBlock)"
   irql="HIGH_LEVEL (15/31)"
   caller="winload.efi: OslArchTransferToKernel"
   phase="Phase 0 Core Entry"
@@ -63,114 +63,123 @@
 >
 
 ```c
-NTSTATUS __stdcall __noreturn KiSystemStartup(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
+// Источник: source/ntoskrnl.exe/Ki/KiSystemStartup_14098C010.c
+NTSTATUS __stdcall __noreturn KiSystemStartup(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-  unsigned int *v2; // r10
-  unsigned __int64 v4; // r8
-  unsigned __int64 v5; // r8
-  unsigned __int64 v6; // r8
-  unsigned __int64 v7; // r8
-  __int64 v8; // r8
-  unsigned __int64 v10; // rdx
-  void *v11; // rsp
-  __int64 v12; // rcx
-  __int64 v13; // rdx
-  unsigned __int64 v14; // r8
-  __int64 v15; // rdx
-  __int64 v16; // r8
-  __int64 v17; // r9
-  unsigned __int64 v18; // rax
-  __int64 v19; // rax
-  struct _KTHREAD *CurrentThread; // rcx
-  bool v21; // zf
+  PKPRCB Prcb;
+  PKPCR Pcr;
+  ULONG64 Cr0Val, Cr2Val, Cr3Val, Cr4Val;
+  DESCRIPTOR_TABLE_ENTRY Gdtr, Idtr;
+  ULONG64 GdtBaseAddress;
+  ULONG64 PcrGsBaseAddress;
+  ULONG64 KernelStackLimit;
+  PKTHREAD CurrentIdleThread;
+  ULONG64 TscValue, RotatedTsc, GeneratedCookie;
 
-  // Сохранение указателя на LOADER_PARAMETER_BLOCK
-  KeLoaderBlock_0 = (__int64)DriverObject;
-  if ( !*((_DWORD *)DriverObject->MajorFunction[3] + 9) )
-    KdInitSystem(0xFFFFFFFFLL, KeLoaderBlock_0);
+  // [1] Сохранение глобального указателя на LOADER_PARAMETER_BLOCK и ранний опрос отладчика
+  KeLoaderBlock = LoaderBlock;
+  if ( !LoaderBlock->Extension->DebuggerDisabled )
+    KdInitSystem(0xFFFFFFFF, KeLoaderBlock);
 
-  // Считывание и сохранение управляющих регистров процессора
-  v2 = *(unsigned int **)(KeLoaderBlock_0 + 136);
-  _RDX = v2 - 96;
-  *((_QWORD *)_RDX + 3) = _RDX;
-  *((_QWORD *)_RDX + 4) = v2;
-  v4 = __readcr0();
-  *((_QWORD *)v2 + 32) = v4;
-  v5 = __readcr2();
-  *((_QWORD *)v2 + 33) = v5;
-  v6 = __readcr3();
-  *((_QWORD *)v2 + 34) = v6;
-  v7 = __readcr4();
-  *((_QWORD *)v2 + 35) = v7;
+  // [2] Захват состояния управляющих регистров процессора (CR0, CR2, CR3, CR4)
+  Prcb = (PKPRCB)LoaderBlock->Prcb;
+  Pcr = (PKPCR)((ULONG_PTR)Prcb - FIELD_OFFSET(KPCR, Prcb));
+  Pcr->Self = Pcr;
+  Pcr->CurrentPrcb = Prcb;
 
-  // Сохранение базовых адресов GDTR и IDTR
-  __sgdt((char *)v2 + 342);
-  v8 = *((_QWORD *)v2 + 43);
-  *(_QWORD *)_RDX = v8;
-  __sidt((char *)v2 + 358);
-  *((_QWORD *)_RDX + 7) = *((_QWORD *)v2 + 45);
+  Cr0Val = __readcr0();
+  Prcb->ProcessorState.SpecialRegisters.Cr0 = Cr0Val;
+  Cr2Val = __readcr2();
+  Prcb->ProcessorState.SpecialRegisters.Cr2 = Cr2Val;
+  Cr3Val = __readcr3();
+  Prcb->ProcessorState.SpecialRegisters.Cr3 = Cr3Val;
+  Cr4Val = __readcr4();
+  Prcb->ProcessorState.SpecialRegisters.Cr4 = Cr4Val;
 
-  // Считывание Task Register (TR) и LDTR
+  // [3] Сохранение базовых адресов GDTR и IDTR через инструкции SGDT / SIDT
+  __sgdt(&Gdtr);
+  GdtBaseAddress = Gdtr.Base;
+  Pcr->GdtBase = (PKGDTENTRY64)GdtBaseAddress;
+  __sidt(&Idtr);
+  Pcr->IdtBase = (PKIDTENTRY64)Idtr.Base;
+
+  // [4] Считывание Task Register (STR) и LDTR (SLDT)
   __asm
   {
-    str     word ptr [rdx+2F0h]
-    sldt    word ptr [rdx+2F2h]
+    str     word ptr [Pcr->TssBase]
+    sldt    word ptr [Pcr->Ldtr]
   }
-  *v2 = 8064;
-  _mm_setcsr(*v2);
-  if ( !v2[9] )
-    *(_WORD *)(v8 + 80) = 15360;
 
-  // Программирование MSR 0xC0000101 (GS_BASE) и 0xC0000102 (KERNEL_GS_BASE)
-  // Это делает структуру KPCR доступной через сегментный регистр gs:
-  v10 = (unsigned __int64)_RDX >> 32;
-  __writemsr(0xC0000101, __PAIR64__(v10, (int)v2 - 384));
-  __writemsr(0xC0000102, __PAIR64__(v10, (int)v2 - 384));
+  // [5] Настройка режима работы SSE/AVX через управляющий регистр MXCSR (_mm_setcsr)
+  Prcb->MxCsr = 0x1F80; // 8064: сброс масок всех FPU исключений
+  _mm_setcsr(Prcb->MxCsr);
 
-  // Инициализация структур ранней загрузки ядра
-  KiInitializeBootStructures(KeLoaderBlock_0, v10);
+  if ( !Prcb->Number )
+    *(PUSHORT)(GdtBaseAddress + 0x50) = 0x3C00;
 
-  if ( !*MK_FP(43, *MK_FP(43, KeLoaderBlock_0 + 136) + 36LL) )
-    KdInitSystem(0, KeLoaderBlock_0);
-
-  // Настройка расширений XSAVE (AVX, SSE)
-  KiInitializeXSave(KeLoaderBlock_0, (unsigned int)*MK_FP(43, *MK_FP(43, KeLoaderBlock_0 + 136) + 36LL));
-
-  // Установка IRQL = HIGH_LEVEL (0xF)
-  __writecr8(0xFu);
-
-  v11 = alloca((unsigned int)KiXSaveAreaLength);
-  v12 = *MK_FP(43, KeLoaderBlock_0 + 144);
-  v13 = *MK_FP(43, KeLoaderBlock_0 + 152);
-
-  // Проверка изоляции таблиц страниц KVA Shadow (Meltdown mitigation)
-  if ( (KiKvaShadow & 1) != 0 )
+  if ( !VslVsmEnabled )
   {
-    v14 = *MK_FP(43, *MK_FP(43, &KeGetPcr()->IdtBase) + 4216LL);
-    __writegsqword(0x9008u, v14);
+    __asm { lldt ax }
+  }
+
+  // [6] Программирование MSR 0xC0000101 (GS_BASE) и 0xC0000102 (KERNEL_GS_BASE) для привязки KPCR к сегменту gs:
+  PcrGsBaseAddress = (ULONG64)Pcr;
+  __writemsr(MSR_GS_BASE, PcrGsBaseAddress);
+  __writemsr(MSR_KERNEL_GS_BASE, PcrGsBaseAddress);
+
+  if ( !Prcb->Number )
+  {
+    _guard_dispatch_icall_fptr = guard_dispatch_icall;
+    _guard_check_icall_fptr[0] = guard_check_icall;
+  }
+
+  // [7] Инициализация базовых структур ядра (KiInitializeBootStructures) и подсистемы расширенных контекстов XSAVE
+  KiInitializeBootStructures(KeLoaderBlock, (ULONG)(PcrGsBaseAddress >> 32));
+  if ( !Prcb->Number )
+    KdInitSystem(0, KeLoaderBlock);
+
+  KiInitializeXSave(KeLoaderBlock, Prcb->Number);
+
+  // [8] Повышение уровня прерываний до IRQL = HIGH_LEVEL (CR8 = 0xF) и настройка изоляции страниц KVA Shadow
+  __writecr8(HIGH_LEVEL); // 0xF
+
+  alloca(KiXSaveAreaLength);
+
+  if ( KiKvaShadow & 1 )
+  {
+    KernelStackLimit = *(PULONG64)((ULONG_PTR)Pcr->IdtBase + 4216);
+    __writegsqword(KPCR_KVA_STACK_OFFSET, KernelStackLimit);
   }
   else
   {
-    v14 = *MK_FP(43, *MK_FP(43, &KeGetPcr()->TssBase) + 4LL);
+    KernelStackLimit = *(PULONG64)((ULONG_PTR)Pcr->TssBase + 4);
   }
-  __writegsqword(0x1A8u, v14);
+  __writegsqword(KPCR_RSP0_OFFSET, KernelStackLimit);
 
-  // Вызов инициализатора ядра KiInitializeKernel
-  KiInitializeKernel(v12, v13);
+  // [9] Вызов функции инициализации ядра KiInitializeKernel (планировщик, DPC, таймеры, InitBootProcessor)
+  KiInitializeKernel(LoaderBlock->KernelProcess, LoaderBlock->KernelThread);
 
-  // Генерация начального Security Cookie для защиты стека от переполнения
-  if ( !*MK_FP(43, &KeGetPcr()->Prcb.Number) )
+  // [10] Генерация случайного значения Security Cookie (_security_cookie) для защиты стека
+  if ( !Prcb->Number )
   {
-    v18 = __rdtsc();
-    v15 = __ROR8__(v18, 49);
-    v19 = __ROL8__(ExpSecurityCookieRandomData ^ v15 ^ v18, 16);
-    LOWORD(v19) = 0;
-    _security_cookie = __ROR8__(v19, 16);
+    TscValue = __rdtsc();
+    RotatedTsc = _rotr64(TscValue, 49);
+    GeneratedCookie = _rotl64(ExpSecurityCookieRandomData ^ RotatedTsc ^ TscValue, 16);
+    LOWORD(GeneratedCookie) = 0;
+    _security_cookie = _rotr64(GeneratedCookie, 16);
     _security_cookie_complement = ~_security_cookie;
   }
 
-  CurrentThread = KeGetCurrentThread();
-  // Переход в цикл планировщика / диспетчера
+  CurrentIdleThread = KeGetCurrentThread();
+  CurrentIdleThread->State = Running;
+
+  // Ожидание разблокировки барьера другими процессорами (KiBarrierWait)
+  while ( KiBarrierWait != 0 )
+  {
+    _mm_pause();
+  }
+
+  // [11] Переход в бесконечный цикл планировщика / диспетчера потоков KiIdleLoop
   KiIdleLoop();
 }
 ```
@@ -185,7 +194,7 @@ NTSTATUS __stdcall __noreturn KiSystemStartup(PDRIVER_OBJECT DriverObject, PUNIC
   name="InitBootProcessor"
   module="ntoskrnl.exe"
   :exported="false"
-  prototype="__int64 InitBootProcessor(PLOADER_PARAMETER_BLOCK LoaderBlock)"
+  prototype="NTSTATUS __fastcall InitBootProcessor(PLOADER_PARAMETER_BLOCK LoaderBlock)"
   irql="HIGH_LEVEL -> DISPATCH_LEVEL"
   caller="KiInitializeKernel"
   phase="Phase 0 Subsystem Init"
@@ -202,70 +211,88 @@ NTSTATUS __stdcall __noreturn KiSystemStartup(PDRIVER_OBJECT DriverObject, PUNIC
 >
 
 ```c
-__int64 __fastcall InitBootProcessor(__int64 a1)
+// Источник: source/ntoskrnl.exe/Init/InitBootProcessor_140A36F64.c
+NTSTATUS __fastcall InitBootProcessor(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-  char *v2; // rdi
-  ULONG_PTR v20, v21;
-  NTSTATUS v22, v24;
+  NTSTATUS Status;
+  PCSTR LoadOptions;
+  ULONG InitializationPhase = 0;
   UNICODE_STRING *HostNtSystemRoot;
-  char pszDest[256];
+  STRING AnsiSystemRoot;
+  CHAR SystemRootPathBuffer[256];
 
+  // Валидация дескрипторов загрузчика и инициализация подсистемы лицензирования
   ExpValidateLoader();
-  ExpInitLicensing((__int64)&PspHostSiloGlobals);
+  ExpInitLicensing(&PspHostSiloGlobals);
 
-  // [1] Инициализация таблиц NLS (кодировки символов UTF-16, ANSI, OEM)
-  RtlInitNlsTables(v18, v17, v16);
+  if ( (VslGetNestedPageProtectionFlags() & 6) == 6 )
+    ExpRevokeBootLoaderPagePrivileges(LoaderBlock);
+
+  VslGetSecureSpeculationControlInformation();
+
+  // Разбор параметров командной строки загрузки (PERFMEM, DEBUG, SAFEBOOT)
+  LoadOptions = LoaderBlock->LoadOptions;
+  if ( LoadOptions )
+  {
+    _strupr((PSTR)LoadOptions);
+    if ( strstr(LoadOptions, "PERFMEM") )
+    {
+      // Выделение пула буфера производительности телеметрии
+    }
+  }
+
+  // [1] Инициализация национальных таблиц кодировок NLS (UTF-16, ANSI, OEM)
+  RtlInitNlsTables(
+    LoaderBlock->NlsData->AnsiCodePageData,
+    LoaderBlock->NlsData->OemCodePageData,
+    LoaderBlock->NlsData->UnicodeCodePageData
+  );
   RtlResetRtlTranslations();
 
-  // [2] Инициализация архитектуры WHEA (Windows Hardware Error Architecture)
+  // [2] Инициализация архитектуры аппаратных ошибок WHEA (Windows Hardware Error Architecture)
   WheaInitializeServices();
 
-  // [3] Инициализация слоя аппаратных абстракций HAL (Phase 0)
-  LODWORD(InitializationPhase) = 0;
-  v20 = (unsigned int)InitializationPhase;
-  if ( !(unsigned __int8)HalInitSystem(v20, a1) )
-    KeBugCheck(0x5Cu); // HAL_INITIALIZATION_FAILED
+  // [3] Инициализация аппаратно-зависимого слоя HAL фазы 0 (контроллеры прерываний, APIC, таймеры)
+  if ( !HalInitSystem(InitializationPhase, LoaderBlock) )
+    KeBugCheck(HAL_INITIALIZATION_FAILED); // 0x5C
 
-  // [4] Инициализация системного таймера и счетчиков тактов
-  v21 = (unsigned int)InitializationPhase;
-  KeInitializeClock(v21);
+  // [4] Инициализация системных таймеров и калибровка счетчиков тактов
+  KeInitializeClock(InitializationPhase);
 
-  // [5] Первичная инициализация куста реестра SYSTEM
-  CmInitSystem0(a1);
+  // [5] Первичная инициализация куста реестра SYSTEM (монтирование ключей ControlSet)
+  CmInitSystem0(LoaderBlock);
 
-  // [6] Инициализация планировщика ядра (DPC очереди, приоритеты, кванты)
-  if ( !(unsigned __int8)KeInitSystem(0) )
-    KeBugCheckEx(0x31u, 0xFFFFFFFFC0000001uLL, 0xBu, 0, 0);
+  // [6] Инициализация структур планировщика ядра (DPC очереди, приоритеты, кванты)
+  if ( !KeInitSystem(InitializationPhase) )
+    KeBugCheckEx(PHASE0_INITIALIZATION_FAILED, STATUS_UNSUCCESSFUL, 0xB, 0, 0);
 
   // [7] Построение системного корня (C:\Windows -> \SystemRoot)
-  v22 = RtlStringCbPrintfA(pszDest, 0x100u, "C:%s", *(const char **)(a1 + 200));
-  HostNtSystemRoot = (UNICODE_STRING *)RtlGetHostNtSystemRoot();
-  RtlAnsiStringToUnicodeString(HostNtSystemRoot, &DestinationString_8, 0);
+  RtlStringCbPrintfA(SystemRootPathBuffer, sizeof(SystemRootPathBuffer), "C:%s", LoaderBlock->NtBootPathName);
+  RtlInitAnsiString(&AnsiSystemRoot, SystemRootPathBuffer);
+  HostNtSystemRoot = (PUNICODE_STRING)RtlGetHostNtSystemRoot();
+  RtlAnsiStringToUnicodeString(HostNtSystemRoot, &AnsiSystemRoot, FALSE);
 
-  // [8] Инициализация Executive (ExpInitSystemPhase0: пулы памяти, списки ресурсов)
-  if ( !(unsigned __int8)ExInitSystem() )
-    KeBugCheckEx(0x31u, 0, 0, 0, 0);
+  // [8] Инициализация исполнительной подсистемы Executive (ExpInitSystemPhase0: пулы памяти, ресурсы)
+  if ( !ExInitSystem() )
+    KeBugCheckEx(PHASE0_INITIALIZATION_FAILED, 0, 0, 0, 0);
 
-  // [9] Инициализация Менеджера Памяти Mm (Phase 0)
-  // Создание PFN Database, NonPagedPool, PagedPool, системных PTE
-  if ( !(unsigned __int8)MmInitSystem(0, a1) )
-    KeBugCheck(0x31u);
+  // [9] Инициализация Диспетчера Памяти Mm фазы 0 (создание PFN Database, NonPagedPool, PagedPool)
+  if ( !MmInitSystem(InitializationPhase, LoaderBlock) )
+    KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
-  // 10. Инициализация Диспетчера Объектов Ob (Phase 0)
-  // Создание корневой папки "\", типов ObjectType, Directory, SymbolicLink
-  if ( !(unsigned __int8)ObInitSystem(0) )
-    KeBugCheck(0x31u);
+  // [10] Инициализация Диспетчера Объектов Ob фазы 0 (создание корневой папки "\", типов ObjectType, Directory)
+  if ( !ObInitSystem(InitializationPhase) )
+    KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
-  // 11. Инициализация Подсистемы Безопасности Se (Phase 0)
-  if ( !(unsigned __int8)SeInitSystem(0) )
-    KeBugCheck(0x31u);
+  // [11] Инициализация Подсистемы Безопасности Se фазы 0 (создание токенов и дескрипторов безопасности)
+  if ( !SeInitSystem(InitializationPhase) )
+    KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
-  // 12. Инициализация Диспетчера Процессов и Потоков Ps (Phase 0)
-  // Создание процесса "System" (EPROCESS) и первого потока Phase1Initialization
-  if ( !(unsigned __int8)PsInitSystem(0, a1) )
-    KeBugCheck(0x31u);
+  // [12] Инициализация Диспетчера Процессов Ps фазы 0 (создание процесса "System" и первого системного потока)
+  if ( !PsInitSystem(InitializationPhase, LoaderBlock) )
+    KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
-  // 13. Запуск первого системного потока Phase1Initialization
+  // [13] Успешное завершение фазы 0
   return STATUS_SUCCESS;
 }
 ```

@@ -336,7 +336,7 @@ Cleanup:
 
 ---
 
-### 3. Формирование списка загрузки: `BmGetBootSequence`
+### 3. Формирование списка загрузки: `BmGetBootSequence` и `BmpPopulateBootEntryList`
 
 <FunctionCard 
   name="BmGetBootSequence"
@@ -345,7 +345,7 @@ Cleanup:
   prototype="NTSTATUS __fastcall BmGetBootSequence(HANDLE BcdStoreHandle, PGUID SequenceGuidList, ULONG SequenceCount, ULONG Flags, PBOOT_APPLICATION_ENTRY **BootEntryList, PULONG ReturnedCount)"
   irql="UEFI Context"
 >
-Выделяет массив указателей в куче <Term term="BOOTLIB">BootLib</Term> и считывает параметры каждой загрузочной записи из базы <Term term="BCD">BCD</Term> по ее <Term term="GUID">GUID</Term>-идентификатору через `BmpPopulateBootEntryList`.
+Выделяет массив указателей в куче <Term term="BOOTLIB">BootLib</Term> и считывает параметры каждой загрузочной записи из базы <Term term="BCD">BCD</Term> по ее <Term term="GUID">GUID</Term>-идентификатору через внутреннюю функцию `BmpPopulateBootEntryList`.
 </FunctionCard>
 
 <DecompiledCode 
@@ -399,6 +399,206 @@ NTSTATUS __fastcall BmGetBootSequence(
   *BootEntryList = EntryArray;
   *ReturnedCount = ActualLoadedCount;
   return STATUS_SUCCESS;
+}
+```
+
+</DecompiledCode>
+
+<FunctionCard 
+  name="BmpPopulateBootEntryList"
+  module="bootmgr.efi"
+  :exported="false"
+  prototype="NTSTATUS __fastcall BmpPopulateBootEntryList(HANDLE BcdStoreHandle, PGUID GuidList, ULONG EntryFlags, PBOOT_APPLICATION_ENTRY *EntryArray, PULONG EntryCount)"
+  irql="UEFI Context"
+>
+Выполняет разбор BCD-элементов каждого объекта (устройство, тип приложения, флаги winload, winresume, memtest), формирует структуры `BOOT_APPLICATION_ENTRY` и проставляет пути автозапуска исполняемых образов по умолчанию.
+</FunctionCard>
+
+<DecompiledCode 
+  name="BmpPopulateBootEntryList"
+  module="bootmgr.efi"
+  callingConvention="__fastcall"
+  :isExported="false"
+  summary="Считывание BCD опций объекта, выделение дескриптора записи и установка параметров winload/winresume"
+>
+
+```c
+NTSTATUS __fastcall BmpPopulateBootEntryList(
+    HANDLE BcdStoreHandle,
+    PGUID GuidList,
+    ULONG EntryFlags,
+    PBOOT_APPLICATION_ENTRY *EntryArray,
+    PULONG EntryCount)
+{
+  NTSTATUS Status = STATUS_NOT_FOUND;
+  NTSTATUS ObjectStatus = STATUS_SUCCESS;
+  PBOOT_OPTIONS RawOptions = NULL;
+  PBOOT_APPLICATION_ENTRY BootEntry = NULL;
+  HANDLE BcdObjectHandle = NULL;
+  ULONG OptionListSize = 0;
+  ULONG LoadedCount = 0;
+  ULONG GuidIndex = 0;
+  ULONG TotalGuids = *EntryCount;
+  ULONG ObjectType = 0;
+  GUID CurrentGuid;
+  BOOLEAN HasAppPath = FALSE;
+  BOOLEAN WinloadFallback = FALSE;
+  BOOLEAN EmsEnabled = FALSE;
+  PCWSTR DefaultWinloadPath = NULL;
+  OBJECT_DESCRIPTION ObjDescription;
+
+  if ( !TotalGuids )
+    return STATUS_NOT_FOUND;
+
+  // [1] Итеративный обход всех переданных GUID-идентификаторов загрузочных записей
+  while ( GuidIndex < TotalGuids )
+  {
+    CurrentGuid = GuidList[GuidIndex];
+    BootEntry = NULL;
+
+    // [2] Запрос полного списка BCD-элементов объекта из куста реестра
+    ObjectStatus = BmGetOptionList(BcdStoreHandle, &CurrentGuid, &RawOptions);
+    if ( !NT_SUCCESS(ObjectStatus) )
+      goto ProcessNextEntry;
+
+    // [3] Валидация обязательных BCD-элементов: устройство (BCD_OS_DEVICE) и тип приложения (BCD_OS_APPLICATION_TYPE)
+    if ( !BcdUtilGetBootOption(RawOptions, BCD_OS_DEVICE) ||
+         !BcdUtilGetBootOption(RawOptions, BCD_OS_APPLICATION_TYPE) )
+    {
+      ObjectStatus = STATUS_INVALID_PARAMETER;
+      goto ProcessNextEntry;
+    }
+
+    // [4] Выделение памяти под дескриптор BOOT_APPLICATION_ENTRY вместе со списком опций
+    OptionListSize = BlGetBootOptionListSize(RawOptions);
+    BootEntry = (PBOOT_APPLICATION_ENTRY)BlMmAllocateHeap(OptionListSize + sizeof(BOOT_APPLICATION_ENTRY));
+    if ( !BootEntry )
+    {
+      ObjectStatus = STATUS_INSUFFICIENT_RESOURCES;
+      goto Cleanup;
+    }
+
+    // [5] Инициализация структуры загрузочной записи в памяти BootLib
+    memset(BootEntry, 0, sizeof(BOOT_APPLICATION_ENTRY));
+    BootEntry->Guid = CurrentGuid;
+    BootEntry->Flags = EntryFlags;
+    BootEntry->Options = (PBOOT_OPTIONS)((ULONG_PTR)BootEntry + sizeof(BOOT_APPLICATION_ENTRY));
+    memmove(BootEntry->Options, RawOptions, OptionListSize);
+    EntryArray[LoadedCount] = BootEntry;
+
+    // [6] Открытие объекта BCD для определения типа целевого приложения
+    ObjectStatus = BcdOpenObject(BcdStoreHandle, &CurrentGuid, &BcdObjectHandle);
+    if ( NT_SUCCESS(ObjectStatus) )
+    {
+      ObjectStatus = BiGetObjectDescription(BcdObjectHandle, &ObjDescription);
+      BiCloseKey(BcdObjectHandle);
+      ObjectType = ObjDescription.Type;
+    }
+
+    if ( NT_SUCCESS(ObjectStatus) )
+    {
+      // [7] Проверка наличия пути к исполняемому файлу (BCD_OS_APPLICATION_PATH)
+      HasAppPath = (BcdUtilGetBootOption(RawOptions, BCD_OS_APPLICATION_PATH) != NULL);
+
+      // Классификация типа приложения по BCD Object Type
+      if ( (ObjectType >> 28) == BCD_OBJECT_TYPE_APPLICATION )
+      {
+        switch ( ObjectType & 0xFFFFF )
+        {
+          case BCD_APP_TYPE_RESUME:      // winresume.efi
+            BootEntry->Flags |= BOOT_ENTRY_FLAG_RESUME;
+            break;
+
+          case BCD_APP_TYPE_OS_LOADER:   // winload.efi
+            BootEntry->Flags |= BOOT_ENTRY_FLAG_OS_LOADER;
+            if ( !HasAppPath )
+            {
+              // Автоподстановка стандартного пути к winload.efi при его отсутствии в BCD
+              WinloadFallback = FALSE;
+              BlGetBootOptionBoolean(RawOptions, BCD_OS_BOOT_WINLOAD_BOOT_DIR, &WinloadFallback);
+              DefaultWinloadPath = WinloadFallback ? L"\\Windows\\System32\\boot\\winload.efi"
+                                                   : L"\\Windows\\System32\\winload.efi";
+
+              ObjectStatus = BlAppendBootOptionString(BootEntry, BCD_OS_APPLICATION_PATH, DefaultWinloadPath);
+              if ( !NT_SUCCESS(ObjectStatus) )
+                goto Cleanup;
+              HasAppPath = TRUE;
+            }
+            break;
+
+          case BCD_APP_TYPE_MEMTEST:     // memtest.exe
+            BootEntry->Flags |= BOOT_ENTRY_FLAG_MEMTEST;
+            break;
+
+          case BCD_APP_TYPE_NTLDR:       // Legacy NTLDR
+            BootEntry->Flags |= BOOT_ENTRY_FLAG_NTLDR;
+            break;
+
+          case BCD_APP_TYPE_SETUP:       // Setup / WinPE
+            BootEntry->Flags |= BOOT_ENTRY_FLAG_SETUP;
+            break;
+
+          case BCD_APP_TYPE_BOOT_SECTOR: // Boot sector chainloader
+            BootEntry->Flags |= BOOT_ENTRY_FLAG_BOOTSECTOR;
+            break;
+        }
+      }
+
+      if ( !HasAppPath )
+      {
+        ObjectStatus = STATUS_INVALID_PARAMETER;
+        goto ProcessNextEntry;
+      }
+
+      // [8] Проверка флага EMS (Emergency Management Services / Serial Console)
+      if ( (ObjectType >> 28) == BCD_OBJECT_TYPE_APPLICATION &&
+           (ObjectType & 0xF00000) == 0x400000 &&
+           (ObjectType & 0xFFFFF) == BCD_APP_TYPE_OS_LOADER )
+      {
+        EmsEnabled = FALSE;
+        if ( NT_SUCCESS(BlGetBootOptionBoolean(RawOptions, BCD_OS_EMS_ENABLED, &EmsEnabled)) && EmsEnabled )
+        {
+          BootEntry->Flags |= BOOT_ENTRY_FLAG_EMS;
+        }
+      }
+    }
+
+ProcessNextEntry:
+    if ( RawOptions )
+    {
+      BlMmFreeHeap(RawOptions);
+      RawOptions = NULL;
+    }
+
+    if ( !NT_SUCCESS(ObjectStatus) )
+    {
+      Status = ObjectStatus;
+      if ( BootEntry )
+      {
+        BlDestroyBootEntry(BootEntry);
+        EntryArray[LoadedCount] = NULL;
+      }
+    }
+    else
+    {
+      LoadedCount++;
+    }
+
+    GuidIndex++;
+  }
+
+  // [9] Проверка наличия хотя бы одной успешно загруженной записи
+  if ( LoadedCount > 0 )
+  {
+    *EntryCount = LoadedCount;
+    return STATUS_SUCCESS;
+  }
+
+Cleanup:
+  if ( RawOptions )
+    BlMmFreeHeap(RawOptions);
+
+  return Status;
 }
 ```
 
