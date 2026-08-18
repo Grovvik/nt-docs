@@ -4,7 +4,7 @@ export default defineConfig({
   title: 'Windows NT Internals',
   description: 'Интерактивная низкоуровневая документация и разбор архитектуры ядра Windows NT: от аппаратного старта и фаз ядра до IPC, драйверов, структур памяти и подсистем Ring 3',
   lang: 'ru-RU',
-  base: '/',
+  base: '/nt-docs/',
   cleanUrls: true,
   themeConfig: {
     siteTitle: 'Windows NT Internals',
