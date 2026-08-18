@@ -11,9 +11,6 @@ hero:
     - theme: alt
       text: "Термины"
       link: "/glossary/"
-    - theme: alt
-      text: "Карта"
-      link: "/reference/flowchart"
 
 features:
   - title: "Декомпилированный C-код ядра"

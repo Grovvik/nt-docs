@@ -32,7 +32,6 @@ export default defineConfig({
         ]
       },
       { text: 'Термины', link: '/glossary/' },
-      { text: 'Карта', link: '/stages/01-firmware-uefi-mbr#_1-1-сквозная-архитектурная-карта-cold-boot-загрузки-uefi-x64' },
       { text: 'Структуры', link: '/reference/structures' }
     ],
     sidebar: [
@@ -62,8 +61,7 @@ export default defineConfig({
         text: 'Справочники и внутренние структуры',
         items: [
           { text: 'Интерактивный глоссарий', link: '/glossary/' },
-          { text: 'Низкоуровневые структуры ядра', link: '/reference/structures' },
-          { text: 'Карта cold-boot вызовов (UEFI x64)', link: '/reference/flowchart' }
+          { text: 'Низкоуровневые структуры ядра', link: '/reference/structures' }
         ]
       }
     ],
