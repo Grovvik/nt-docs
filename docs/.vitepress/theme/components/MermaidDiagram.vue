@@ -111,8 +111,8 @@ const renderDiagram = async () => {
       theme: isDark.value ? 'dark' : 'default',
       themeVariables: isDark.value ? {
         darkMode: true,
-        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-        fontSize: '13px',
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontSize: '12px',
         background: 'transparent',
         mainBkg: '#18181b',
         nodeBorder: 'rgba(56, 189, 248, 0.5)',
@@ -125,11 +125,11 @@ const renderDiagram = async () => {
         clusterBkg: 'rgba(24, 24, 27, 0.6)',
         clusterBorder: 'rgba(255, 255, 255, 0.15)',
         titleColor: '#38bdf8',
-        edgeLabelBackground: '#18181b'
+        edgeLabelBackground: 'transparent'
       } : {
         darkMode: false,
-        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-        fontSize: '13px',
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontSize: '12px',
         background: 'transparent',
         mainBkg: '#f8fafc',
         nodeBorder: 'rgba(2, 132, 199, 0.4)',
@@ -142,7 +142,7 @@ const renderDiagram = async () => {
         clusterBkg: 'rgba(248, 250, 252, 0.7)',
         clusterBorder: 'rgba(0, 0, 0, 0.12)',
         titleColor: '#0284c7',
-        edgeLabelBackground: '#ffffff'
+        edgeLabelBackground: 'transparent'
       },
       securityLevel: 'loose',
       flowchart: {
@@ -151,7 +151,7 @@ const renderDiagram = async () => {
         curve: 'basis',
         nodeSpacing: 35,
         rankSpacing: 45,
-        padding: 12,
+        padding: 16,
         subGraphTitleMargin: {
           top: 15,
           bottom: 15
@@ -505,18 +505,13 @@ onUnmounted(() => {
   margin: 0 !important;
 }
 
-.svg-vector-host :deep(.node .nodeLabel),
-.svg-vector-host :deep(.node foreignObject div),
-.svg-vector-host :deep(.node foreignObject span),
-.svg-vector-host :deep(.node foreignObject p),
-.svg-vector-host :deep(.node text),
-.svg-vector-host :deep(.node tspan) {
-  display: block !important;
+.svg-vector-host :deep(.node .nodeLabel) {
+  display: inline-block !important;
   width: 100% !important;
   text-align: center !important;
   white-space: nowrap !important;
   word-break: keep-all !important;
-  line-height: 1.3 !important;
+  line-height: 1.4 !important;
   margin: 0 auto !important;
   padding: 0 !important;
 }
@@ -538,6 +533,13 @@ onUnmounted(() => {
   white-space: nowrap !important;
   text-align: center !important;
   overflow: visible !important;
+}
+
+.svg-vector-host :deep(.edgeLabel rect),
+.svg-vector-host :deep(.edgeLabel .label-container) {
+  fill: transparent !important;
+  stroke: transparent !important;
+  background: transparent !important;
 }
 
 .svg-vector-host :deep(.edgeLabel foreignObject) {

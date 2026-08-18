@@ -14,7 +14,7 @@ export default defineConfig({
         text: 'Старт ОС',
         items: [
           { text: '1. Firmware & UEFI / MBR', link: '/stages/01-firmware-uefi-mbr' },
-          { text: '2. Windows Boot Manager (bootmgr.efi)', link: '/stages/02-bootmgr' },
+          { text: '2. Windows Boot Manager (bootmgfw.efi)', link: '/stages/02-bootmgr' },
           { text: '3. Windows OS Loader (winload.efi)', link: '/stages/03-winload' },
           { text: '4. Kernel Phase 0 (ntoskrnl.exe)', link: '/stages/04-kernel-phase0' },
           { text: '5. Kernel Phase 1 (Subsystems & PnP)', link: '/stages/05-kernel-phase1' },
@@ -33,7 +33,7 @@ export default defineConfig({
         items: [
           { text: 'Обзор архитектуры NT', link: '/' },
           { text: '1. Firmware (UEFI / MBR / BDS)', link: '/stages/01-firmware-uefi-mbr' },
-          { text: '2. Boot Manager (bootmgr.efi)', link: '/stages/02-bootmgr' },
+          { text: '2. Boot Manager (bootmgfw.efi)', link: '/stages/02-bootmgr' },
           { text: '3. OS Loader (winload.efi)', link: '/stages/03-winload' },
           { text: '4. Kernel Phase 0 (Executive Init)', link: '/stages/04-kernel-phase0' },
           { text: '5. Kernel Phase 1 (Drivers & PnP)', link: '/stages/05-kernel-phase1' },
@@ -47,7 +47,7 @@ export default defineConfig({
         items: [
           { text: 'Интерактивный глоссарий', link: '/glossary/' },
           { text: 'Низкоуровневые структуры ядра', link: '/reference/structures' },
-          { text: 'Полная архитектурная карта вызовов', link: '/reference/flowchart' }
+          { text: 'Карта cold-boot вызовов (UEFI x64)', link: '/reference/flowchart' }
         ]
       }
     ],

@@ -67,7 +67,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     layer: 'Hardware / Firmware',
     category: 'CPU & Architecture',
     summary: 'Ключевой системный регистр процессора x86/x64, управляющий режимами работы процессора (Real Mode / Protected Mode), страничной памятью и кэшированием.',
-    details: 'Бит 0 (PE — Protection Enable) переключает процессор в защищенный режим. Бит 31 (PG — Paging) включает трансляцию виртуальных страниц. Бит 16 (WP — Write Protect) запрещает ядру Ring 0 запись в страницы, помеченные как read-only.',
+    details: 'Бит 0 (Protection Enable) переключает процессор в защищенный режим. Бит 31 (Paging) включает трансляцию виртуальных страниц. Бит 16 (Write Protect) запрещает ядру Ring 0 запись в страницы, помеченные как read-only.',
     structureOrRegister: 'CR0 (Bits: PE, MP, EM, TS, NE, WP, AM, NW, CD, PG)',
     physicalLocation: 'Системный регистр управления на кремниевом кристалле процессора (CPU)',
     relatedTerms: ['PROTECTED_MODE', 'CR3', 'CR4', 'REAL_MODE']
@@ -225,7 +225,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     fullName: 'Virtualization-Based Security (Безопасность на основе виртуализации)',
     layer: 'Ring -1 (Hypervisor)',
     category: 'Security & Protection',
-    summary: 'Технология изоляции Windows, использующая гипервизор Hyper-V для создания защищенных виртуальных уровней доверия (Virtual Trust Levels — VTL 0 и VTL 1).',
+    summary: 'Технология изоляции Windows, использующая гипервизор Hyper-V для создания защищенных виртуальных уровней доверия (VTL 0 и VTL 1).',
     details: 'Обычная Windows (ядро и приложения) работает в VTL 0. Изолированное защищенное ядро (Secure Kernel, securekernel.exe) и изолированный процесс LSA (Credential Guard) работают в VTL 1, полностью защищенные даже при компрометации Ring 0 в VTL 0.',
     structureOrRegister: 'Hyper-V / VTL0 vs VTL1 / SLAT (EPT/NPT)',
     relatedTerms: ['HVCI', 'ELAM', 'Secure Boot']
@@ -237,7 +237,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     layer: 'Ring -1 (Hypervisor)',
     category: 'Security & Protection',
     summary: 'Функция безопасности VBS, запрещающая исполнение неподписанного или измененного кода в пространстве ядра Windows с помощью аппаратной виртуализации (SLAT / Second Level Address Translation).',
-    details: 'Гипервизор контролирует биты прав доступа на страницах памяти ядра (W^X — Write XOR Execute). Страница не может быть одновременно доступна на запись и исполнение, что предотвращает инъекцию шеллкода в Ring 0.',
+    details: 'Гипервизор контролирует биты прав доступа на страницах памяти ядра (Write XOR Execute). Страница не может быть одновременно доступна на запись и исполнение, что предотвращает инъекцию шеллкода в Ring 0.',
     structureOrRegister: 'SLAT Page Tables / CI.dll / VTL1',
     physicalLocation: 'Гипервизор (VTL 1) / Аппаратные таблицы SLAT в RAM',
     relatedTerms: ['VBS', 'ELAM']
