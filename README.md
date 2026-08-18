@@ -15,11 +15,10 @@ Interactive low-level documentation and visual exploration of the Windows NT ker
 
 ## Key Features
 
-- **Decompiled C Pseudocode**: Real signatures and disassembly reconstructions of critical kernel functions (`KiSystemStartup`, `MmInitSystem`, `ObInitSystem`, `SmpInit`, `IopInitializeBootDrivers`, etc.).
-- **Interactive Term Tooltips (`<Term>`)**: Contextual hover tooltips with definitions, register mappings, and privilege rings for structures like `_KPCR`, `_KPRCB`, `_EPROCESS`, `_IRP`, `SSDT`, `IDT`, `GDT`.
-- **Canvas Call Graph**: Vector-based Mermaid call graph supporting pan and zoom with cursor targeting.
-- **Stage Lifecycle Visualizer**: Step-by-step pipeline covering hardware initialization, boot manager, kernel phases 0/1, SMSS, Wininit, and user logon.
-- **Kernel Structure Glossary**: Searchable index of x64 Windows NT internal structures and CPU control registers based on build `10.0.19045.2965`.
+- **Decompiled C Pseudocode**: Real signatures and disassembly reconstructions of critical kernel functions
+- **Interactive Term Tooltips (`<Term>`)**: Contextual hover tooltips with definitions, register mappings, and privilege rings for structures
+- **Canvas Call Graph**: Vector-based Mermaid call graph supporting pan and zoom with cursor targeting
+- **Kernel Structure Glossary**: Searchable index of x64 Windows NT internal structures and CPU control registers based on build `10.0.19045.2965`
 
 ---
 

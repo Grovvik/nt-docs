@@ -5,7 +5,6 @@ interface Stage {
   id: string
   title: string
   subtitle: string
-  timeEstimate: string
   layer: 'Firmware' | 'Loader' | 'Ring 0' | 'Ring 3'
   link: string
   keyFunctions: string[]
@@ -17,7 +16,6 @@ const stages: Stage[] = [
     id: 'firmware',
     title: '1. Firmware & UEFI / MBR',
     subtitle: 'SEC -> PEI -> DXE -> BDS',
-    timeEstimate: '0 - 1200 ms',
     layer: 'Firmware',
     link: '/stages/01-firmware-uefi-mbr',
     keyFunctions: ['SecStartup', 'PeiMain', 'DxeMain', 'BdsEntry', 'bootx64.efi'],
@@ -27,7 +25,6 @@ const stages: Stage[] = [
     id: 'bootmgr',
     title: '2. Windows Boot Manager',
     subtitle: 'bootmgr.efi / bootmgr',
-    timeEstimate: '1200 - 1800 ms',
     layer: 'Loader',
     link: '/stages/02-bootmgr',
     keyFunctions: ['BmMain', 'BmOpenBootConfigurationDataStore', 'BmFveOpenVolume', 'BmLaunchBootApplication'],
@@ -37,7 +34,6 @@ const stages: Stage[] = [
     id: 'winload',
     title: '3. Windows OS Loader',
     subtitle: 'winload.efi',
-    timeEstimate: '1800 - 2400 ms',
     layer: 'Loader',
     link: '/stages/03-winload',
     keyFunctions: ['OslMain', 'OslLoadAndInitializeKernel', 'OslpLoadBootDrivers', 'BlMmExitBootServices'],
@@ -47,7 +43,6 @@ const stages: Stage[] = [
     id: 'kernel-p0',
     title: '4. Kernel Phase 0 Initialization',
     subtitle: 'ntoskrnl.exe (Single CPU, IRQL HIGH)',
-    timeEstimate: '2400 - 2900 ms',
     layer: 'Ring 0',
     link: '/stages/04-kernel-phase0',
     keyFunctions: ['KiSystemStartup', 'KiInitializeKernel', 'InitBootProcessor', 'HalInitSystem(0)', 'MmInitSystem(0)'],
@@ -57,7 +52,6 @@ const stages: Stage[] = [
     id: 'kernel-p1',
     title: '5. Kernel Phase 1 & Subsystems',
     subtitle: 'ntoskrnl.exe (Multi-CPU, IRQL PASSIVE)',
-    timeEstimate: '2900 - 3600 ms',
     layer: 'Ring 0',
     link: '/stages/05-kernel-phase1',
     keyFunctions: ['Phase1InitializationDiscard', 'HalInitSystem(1)', 'IopInitializeBootDrivers', 'StartFirstUserProcess'],
@@ -67,7 +61,6 @@ const stages: Stage[] = [
     id: 'smss',
     title: '6. Session Manager Subsystem',
     subtitle: 'smss.exe (Master & Child Instances)',
-    timeEstimate: '3600 - 4100 ms',
     layer: 'Ring 3',
     link: '/stages/06-smss',
     keyFunctions: ['SmpInit', 'SmpCreatePagingFiles', 'SmpExecuteInitialCommand', 'SmpCreateSession'],
@@ -77,7 +70,6 @@ const stages: Stage[] = [
     id: 'wininit',
     title: '7. System Init & Services (Session 0)',
     subtitle: 'wininit.exe, services.exe, lsass.exe',
-    timeEstimate: '4100 - 4600 ms',
     layer: 'Ring 3',
     link: '/stages/07-wininit-services',
     keyFunctions: ['WinMain', 'ScMain', 'ScStartService', 'LsaInitSystem'],
@@ -87,7 +79,6 @@ const stages: Stage[] = [
     id: 'explorer',
     title: '8. Logon, User Session & Shell',
     subtitle: 'winlogon.exe -> userinit.exe -> explorer.exe',
-    timeEstimate: '4600 - 5200 ms',
     layer: 'Ring 3',
     link: '/stages/08-winlogon-explorer',
     keyFunctions: ['WlInitialize', 'LogonUI.exe', 'Userinit', 'ExplorerWinMain'],
@@ -111,7 +102,7 @@ const getLayerClass = (layer: string) => {
 <template>
   <div class="timeline-container">
     <div class="timeline-header">
-      <h3 class="timeline-title">Хронологический pipeline загрузки Windows</h3>
+      <h3 class="timeline-title">Pipeline загрузки Windows</h3>
     </div>
 
     <div class="timeline-grid">
@@ -125,7 +116,6 @@ const getLayerClass = (layer: string) => {
           @click="activeStage = stage.id"
         >
           <div class="stage-top">
-            <span class="stage-time">{{ stage.timeEstimate }}</span>
             <span class="stage-layer">{{ stage.layer }}</span>
           </div>
 
@@ -144,7 +134,6 @@ const getLayerClass = (layer: string) => {
         <div v-for="stage in stages" :key="'detail-' + stage.id" v-show="activeStage === stage.id" class="detail-card">
           <div class="detail-badge-row">
             <span class="detail-layer-pill" :class="getLayerClass(stage.layer)">{{ stage.layer }}</span>
-            <span class="detail-time-pill">{{ stage.timeEstimate }}</span>
           </div>
 
           <h2 class="detail-heading">{{ stage.title }}</h2>
@@ -160,7 +149,7 @@ const getLayerClass = (layer: string) => {
 
           <div class="detail-actions">
             <a :href="stage.link" class="jump-button">
-              Открыть декомпилированный код этапа →
+              Открыть документацию этапа →
             </a>
           </div>
         </div>

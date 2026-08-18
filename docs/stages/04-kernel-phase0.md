@@ -278,9 +278,9 @@ __int64 __fastcall InitBootProcessor(__int64 a1)
 
 | Структура | Описание | Расположение в памяти |
 |---|---|---|
-| `<Term term="KPCR">_KPCR</Term>` | Kernel Processor Control Region | `gs:[0x0]` (через MSR 0xC0000101) |
-| `<Term term="KPRCB">_KPRCB</Term>` | Processor Control Block (планировщик, DPC, прерывания) | `gs:[0x180]` / `KPCR.Prcb` |
-| `<Term term="IDT">KIDTENTRY64[256]</Term>` | Таблица дескрипторов прерываний | Загружается через `__sidt` / `LIDT` |
-| `<Term term="GDT">KGDTENTRY64</Term>` | Таблица дескрипторов сегментов | Загружается через `__sgdt` / `LGDT` |
-| `<Term term="TSS">KTSS64</Term>` | Task State Segment (стек ядра RSP0, IST-стеки) | Загружается через `LTR` |
+| <Term term="KPCR">`_KPCR`</Term> | Kernel Processor Control Region | `gs:[0x0]` (через MSR 0xC0000101) |
+| <Term term="KPRCB">`_KPRCB`</Term> | Processor Control Block (планировщик, DPC, прерывания) | `gs:[0x180]` / `KPCR.Prcb` |
+| <Term term="IDT">`KIDTENTRY64[256]`</Term> | Таблица дескрипторов прерываний | Загружается через `__sidt` / `LIDT` |
+| <Term term="GDT">`KGDTENTRY64`</Term> | Таблица дескрипторов сегментов | Загружается через `__sgdt` / `LGDT` |
+| <Term term="TSS">`KTSS64`</Term> | Task State Segment (стек ядра RSP0, IST-стеки) | Загружается через `LTR` |
 | `_LOADER_PARAMETER_BLOCK` | Блок параметров от winload.efi | Передается через регистр `RCX` в `KiSystemStartup` |

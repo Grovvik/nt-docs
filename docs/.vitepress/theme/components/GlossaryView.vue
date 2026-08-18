@@ -137,6 +137,11 @@ const getLayerBadgeColor = (layer: string) => {
             <code class="meta-code">{{ item.structureOrRegister }}</code>
           </div>
 
+          <div v-if="item.physicalLocation" class="term-structure-box location-box">
+            <span class="meta-label">📍 Физическое размещение:</span>
+            <span class="meta-location-text">{{ item.physicalLocation }}</span>
+          </div>
+
           <p class="term-details">{{ item.details }}</p>
 
           <div v-if="item.relatedTerms && item.relatedTerms.length" class="term-related-row">
@@ -407,6 +412,23 @@ const getLayerBadgeColor = (layer: string) => {
   box-sizing: border-box;
   max-width: 100%;
   min-width: 0;
+}
+
+.term-structure-box.location-box {
+  background: rgba(2, 132, 199, 0.06);
+  border-color: rgba(2, 132, 199, 0.2);
+}
+
+.dark .term-structure-box.location-box {
+  background: rgba(56, 189, 248, 0.06);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+.meta-location-text {
+  color: var(--vp-c-text-1);
+  font-weight: 500;
+  font-size: 12px;
+  word-break: break-word;
 }
 
 .meta-label {

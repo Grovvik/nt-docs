@@ -17,24 +17,20 @@ hero:
 
 features:
   - title: "Декомпилированный C-код ядра"
-    details: "Ключевые функции микроядра (Ke), исполнительной системы (Ex), диспетчера памяти (Mm), I/O и подсистем Ring 3 с  реверс-инжинирингом."
+    details: "Ключевые функции микроядра (Ke), исполнительной системы (Ex), диспетчера памяти (Mm), I/O и подсистем Ring 3"
   - title: "Интерактивная энциклопедия структур"
-    details: "Наведите курсор на неизвестный термин для получения контекстной справки, схемы и связанных регистров."
-  - title: "Реальный билд Windows 10/11 x64"
-    details: "Основано на детальном анализе структур, смещений и функций ядра Windows NT (10.0.19045.2965 22H2)."
+    details: "Наведите курсор на неизвестный термин для получения контекстной справки, схемы и связанных регистров"
+  - title: "Build Windows 10 x64"
+    details: "Основано на анализе структур и функций ядра Windows NT (10.0.19045.2965 22H2)"
 ---
 
 <BootTimeline />
 
-<BootFlowGraph />
+## Краткий обзор запуска Windows NT
 
-## Архитектурные уровни операционной системы
-
-Архитектурный конвейер становления и работы подсистем Windows NT:
-
-1. **<Term term="Firmware">Firmware / UEFI</Term> & MBR**:
-   - Аппаратная инициализация чипсета, памяти и процессора (фазы SEC -> PEI -> DXE).
-   - Выбор устройства загрузки (BDS), валидация ключей <Term term="Secure Boot">Secure Boot</Term> и запуск `\EFI\Microsoft\Boot\bootmgfw.efi`.
+1. **<Term term="Firmware">Firmware / UEFI</Term> & <Term term="MBR">MBR</Term>**:
+   - Аппаратная инициализация чипсета, памяти и процессора (фазы <Term term="SEC">SEC</Term> -> <Term term="PEI">PEI</Term> -> <Term term="DXE">DXE</Term>).
+   - Выбор устройства загрузки (<Term term="BDS">BDS</Term>), валидация ключей <Term term="Secure Boot">Secure Boot</Term> и запуск `\EFI\Microsoft\Boot\bootmgfw.efi`.
 
 2. **Windows Boot Manager (`bootmgr.efi`)**:
    - Чтение и разбор базы конфигурации <Term term="BCD">BCD</Term>.

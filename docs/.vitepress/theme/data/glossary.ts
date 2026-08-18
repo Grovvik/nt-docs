@@ -7,10 +7,71 @@ export interface GlossaryEntry {
   summary: string;
   details: string;
   structureOrRegister?: string;
+  physicalLocation?: string;
   relatedTerms?: string[];
 }
 
 export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
+  RESET_VECTOR: {
+    term: 'RESET_VECTOR',
+    shortName: 'Reset Vector',
+    fullName: 'Reset Vector 0xFFFFFFF0 (Аппаратный вектор сброса процессора)',
+    layer: 'Hardware / Firmware',
+    category: 'CPU & Architecture',
+    summary: 'Физический адрес (0xFFFFFFF0), с которого любой x86/x64 процессор начинает исполнение первой машинной инструкции после подачи питания или сигнала RESET.',
+    details: 'Находится ровно на 16 байт ниже границы 4 ГБ физического адресного пространства. Содержит 16-байтную инструкцию безусловного перехода (JMP) в основной блок прошивки UEFI/BIOS. Запросы по этому адресу аппаратно направляются чипсетом в микросхему SPI Flash ROM, так как DRAM ещё не инициализирована.',
+    structureOrRegister: 'CS:EIP = 0xF000:0xFFF0 (Base 0xFFFF0000)',
+    physicalLocation: 'Кремниевый кристалл CPU (жестко зашитая логика микрокода) + чип SPI Flash ROM на материнской плате',
+    relatedTerms: ['REAL_MODE', 'PROTECTED_MODE', 'CAR', 'SEC', 'UEFI']
+  },
+  REAL_MODE: {
+    term: 'REAL_MODE',
+    shortName: 'Real Mode',
+    fullName: 'Real Address Mode (16-битный реальный режим процессора x86)',
+    layer: 'Hardware / Firmware',
+    category: 'CPU & Architecture',
+    summary: 'Базовый 16-битный режим совместимости с процессором Intel 8086, в котором любой x86/x64 процессор начинает работу после сброса.',
+    details: 'Ограничен 1 МБ адресуемой памяти (20-битная сегментная адресация: Сегмент * 16 + Смещение). Полностью отсутствует аппаратная защита памяти и кольца привилегий: любой код может перезаписать память любого другого компонента. Фаза SEC в UEFI практически мгновенно переводит процессор из Real Mode в 32-битный Protected Mode.',
+    structureOrRegister: 'CR0.PE = 0',
+    physicalLocation: 'Аппаратный исполнительный конвейер кремниевого кристалла CPU',
+    relatedTerms: ['RESET_VECTOR', 'PROTECTED_MODE', 'LONG_MODE', 'CR0', 'GDT']
+  },
+  PROTECTED_MODE: {
+    term: 'PROTECTED_MODE',
+    shortName: 'Protected Mode',
+    fullName: 'Protected Virtual Address Mode (32-битный защищённый режим)',
+    layer: 'Hardware / Firmware',
+    category: 'CPU & Architecture',
+    summary: '32-битный режим процессора x86 с аппаратной изоляцией памяти, кольцами привилегий (Rings 0–3), таблицами GDT/IDT и поддержкой виртуальной страничной памяти (Paging).',
+    details: 'Включается установкой бита PE (Protection Enable, бит 0) в регистре управления CR0. Позволяет адресовать до 4 ГБ плоской памяти, разграничивать доступ ядра (Ring 0) и приложений (Ring 3) и генерировать аппаратные исключения (#GP) при несанкционированном доступе.',
+    structureOrRegister: 'CR0.PE = 1',
+    physicalLocation: 'Блок управления памятью (MMU) и регистры защиты внутри кристалла CPU',
+    relatedTerms: ['REAL_MODE', 'LONG_MODE', 'CR0', 'GDT', 'IDT', 'PAGE_FAULT']
+  },
+  LONG_MODE: {
+    term: 'LONG_MODE',
+    shortName: 'Long Mode',
+    fullName: 'IA-32e / AMD64 Long Mode (64-битный режим процессора)',
+    layer: 'Hardware / Firmware',
+    category: 'CPU & Architecture',
+    summary: 'Основной 64-битный режим работы современных операционных систем (Windows NT x64), расширяющий регистры до 64 бит и поддерживающий до 256 ТБ адресного пространства.',
+    details: 'Активируется установкой бита EFER.LME (Long Mode Enable) в MSR 0xC0000080 и включением страниц памяти (CR0.PG=1, CR4.PAE=1). Использует 4-уровневую (PML4) или 5-уровневую (PML5) трансляцию страниц, NX-бит защиты от выполнения и 16 регистров общего назначения (RAX-R15).',
+    structureOrRegister: 'IA32_EFER.LME / CR4.PAE',
+    physicalLocation: '64-битный регистровый файл и исполнительные конвейеры ядра CPU',
+    relatedTerms: ['PROTECTED_MODE', 'REAL_MODE', 'CR3', 'PTE', 'NX_BIT']
+  },
+  CR0: {
+    term: 'CR0',
+    shortName: 'CR0',
+    fullName: 'Control Register 0 (Регистр управления процессора CR0)',
+    layer: 'Hardware / Firmware',
+    category: 'CPU & Architecture',
+    summary: 'Ключевой системный регистр процессора x86/x64, управляющий режимами работы процессора (Real Mode / Protected Mode), страничной памятью и кэшированием.',
+    details: 'Бит 0 (PE — Protection Enable) переключает процессор в защищенный режим. Бит 31 (PG — Paging) включает трансляцию виртуальных страниц. Бит 16 (WP — Write Protect) запрещает ядру Ring 0 запись в страницы, помеченные как read-only.',
+    structureOrRegister: 'CR0 (Bits: PE, MP, EM, TS, NE, WP, AM, NW, CD, PG)',
+    physicalLocation: 'Системный регистр управления на кремниевом кристалле процессора (CPU)',
+    relatedTerms: ['PROTECTED_MODE', 'CR3', 'CR4', 'REAL_MODE']
+  },
   SSDT: {
     term: 'SSDT',
     shortName: 'SSDT',
@@ -31,6 +92,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Аппаратная таблица ЦП x86/x64, содержащая шлюзы прерываний, исключений (Page Fault, Double Fault) и аппаратных векторов IRQ.',
     details: 'Регистр IDTR загружается инструкцией LIDT (в функции KiInitializeIdt / KiSystemStartup). Содержит 256 дескрипторов (по 16 байт в x64), указывающих на обработчики исключений (например, KiPageFault, KiBreakpointTrap, KiDoubleFaultAbort).',
     structureOrRegister: 'IDTR / KIDTENTRY64',
+    physicalLocation: 'Физическая оперативная память DRAM (адресуется аппаратным регистром IDTR внутри CPU)',
     relatedTerms: ['GDT', 'TSS', 'KPCR', 'IRQL', 'DPC']
   },
   GDT: {
@@ -42,6 +104,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Таблица процессора, определяющая сегменты памяти (CS, DS, SS, GS, FS) и дескрипторы TSS в защищенном и Long Mode режимах.',
     details: 'В x64 сегментация сведена к минимуму (базовый адрес 0 для большинства сегментов), однако GDT по-прежнему критически необходима для переключения уровней привилегий (CPL: Ring 0 <-> Ring 3) и загрузки селектора TSS (Task State Segment). Загружается через LGDT.',
     structureOrRegister: 'GDTR / KGDTENTRY64',
+    physicalLocation: 'Физическая оперативная память DRAM (адресуется аппаратным регистром GDTR внутри CPU)',
     relatedTerms: ['IDT', 'TSS', 'KPCR', 'CR3']
   },
   TSS: {
@@ -53,6 +116,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Структура x86/x64, используемая процессором для хранения указателей стеков разных колец привилегий (RSP0, RSP1, RSP2) и таблицы IST.',
     details: 'В 64-битном режиме Windows TSS используется для хранения стека ядра (RSP0), на который ЦП переключается при переходе Ring 3 -> Ring 0, а также таблицы IST (Interrupt Stack Table) из 7 выделенных стеков для критических исключений (Double Fault, NMI, Machine Check).',
     structureOrRegister: 'KTSS64 / Task Register (TR)',
+    physicalLocation: 'Физическая оперативная память DRAM (селектор хранится в регистре Task Register TR процессора)',
     relatedTerms: ['GDT', 'IDT', 'KPCR', 'IST']
   },
   KPCR: {
@@ -86,6 +150,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Регистр процессора, содержащий физический адрес корневой таблицы трансляции страниц памяти (PML4 в 4-уровневой или PML5 в 5-уровневой подсистеме).',
     details: 'Каждый процесс в Windows имеет собственное значение DirectoryTableBase (CR3). При переключении контекста потока (KiSwapContext / KiSwapProcess) ядро загружает новый адрес CR3, мгновенно переключая виртуальное адресное пространство на таблицы страниц целевого процесса.',
     structureOrRegister: 'CR3 / EPROCESS.Pcb.DirectoryTableBase',
+    physicalLocation: 'Системный регистр в блоке MMU (Memory Management Unit) на кристалле CPU',
     relatedTerms: ['PTE', 'PDE', 'PFN', 'VAD']
   },
   IRP: {
@@ -174,6 +239,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Функция безопасности VBS, запрещающая исполнение неподписанного или измененного кода в пространстве ядра Windows с помощью аппаратной виртуализации (SLAT / Second Level Address Translation).',
     details: 'Гипервизор контролирует биты прав доступа на страницах памяти ядра (W^X — Write XOR Execute). Страница не может быть одновременно доступна на запись и исполнение, что предотвращает инъекцию шеллкода в Ring 0.',
     structureOrRegister: 'SLAT Page Tables / CI.dll / VTL1',
+    physicalLocation: 'Гипервизор (VTL 1) / Аппаратные таблицы SLAT в RAM',
     relatedTerms: ['VBS', 'ELAM']
   },
   BCD: {
@@ -185,6 +251,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Иерархическая база данных параметров загрузки Windows (в формате куста реестра), заменившая устаревший файл boot.ini.',
     details: 'Хранится в файле `\\EFI\\Microsoft\\Boot\\BCD` (на EFI-разделе) или `\\Boot\\BCD` (на MBR). Содержит GUID-записи для Boot Manager, Winload, тестов памяти и параметров ядра (safeboot, testsigning, debug, noexecute).',
     structureOrRegister: 'BCD Registry Hive / BmOpenBootConfigurationDataStore',
+    physicalLocation: 'NVRAM или раздел EFI (файл на накопителе)',
     relatedTerms: ['bootmgr', 'winload']
   },
   PEB: {
@@ -273,6 +340,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Режим ранней инициализации, при котором L2/L3 кэш процессора настраивается как временная RAM до подъёма контроллера памяти (DRAM).',
     details: 'На фазе SEC прошивки оперативная память ещё физически недоступна. ЦП переводит кэш в режим No-Eviction Mode (NEM) с помощью регистров MTRR, создавая стек для выполнения C-кода фазы PEI.',
     structureOrRegister: 'MTRR (Memory Type Range Registers) / MSR 0x2FF',
+    physicalLocation: 'Кэш-память L2 / L3 (SRAM) внутри кремниевого кристалла процессора',
     relatedTerms: ['SEC', 'PEI', 'UEFI']
   },
   UEFI: {
@@ -284,6 +352,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Современный стандартизированный интерфейс между микропрограммой материнской платы и операционной системой, заменивший Legacy BIOS.',
     details: 'Предоставляет Boot Services (управление памятью, протоколы устройств) и Runtime Services (доступ к переменным NVRAM, капсульное обновление, RTC). Поддерживает GPT, Secure Boot и 64-битный режим процессора с первых миллисекунд.',
     structureOrRegister: 'EFI_SYSTEM_TABLE / EFI_BOOT_SERVICES / EFI_RUNTIME_SERVICES',
+    physicalLocation: 'Микросхема энергонезависимой флеш-памяти SPI Flash ROM (8–32 МБ) на материнской плате',
     relatedTerms: ['SEC', 'PEI', 'DXE', 'BDS', 'GPT']
   },
   SEC: {
@@ -295,6 +364,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Первая фаза исполнения UEFI после аппаратного сброса процессора по вектору 0xFFFFFFF0.',
     details: 'Переключает CPU из 16-битного Real Mode в Flat Protected Mode, настраивает CAR (Cache-as-RAM) и передаёт корень доверия (Root of Trust) диспетчеру фазы PEI.',
     structureOrRegister: 'Reset Vector (0xFFFFFFF0) / SEC Core',
+    physicalLocation: 'Кремниевый кристалл CPU (исполнение из SPI Flash ROM в режиме Cache-as-RAM)',
     relatedTerms: ['CAR', 'PEI', 'UEFI']
   },
   PEI: {
@@ -306,6 +376,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Фаза прошивки, поднимающая контроллер оперативной памяти (DRAM) и базовую системную логику.',
     details: 'Исполняет легковесные модули PEIM (PEI Modules). После обнаружения и настройки планок RAM формирует структуры HOB (Hand-Off Blocks) и передаёт управление фазе DXE.',
     structureOrRegister: 'PEI Foundation / PEIM / HOB List',
+    physicalLocation: 'Кремниевый кристалл CPU + шина SMBus/I2C + чипсет материнской платы',
     relatedTerms: ['SEC', 'DXE', 'HOB', 'CAR']
   },
   PEIM: {
@@ -317,6 +388,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Специализированный драйвер фазы PEI для опроса SPD памяти, чипсета и передачи данных фазе DXE.',
     details: 'Модули PEIM работают в условиях ограниченной памяти CAR, инициализируют шины SMBus/I2C и поднимают DRAM.',
     structureOrRegister: 'EFI_PEI_SERVICES / PPI (PEI-to-PEI Interface)',
+    physicalLocation: 'Кэш CPU (CAR) ➔ оперативная память DRAM',
     relatedTerms: ['PEI', 'HOB', 'CAR']
   },
   DXE: {
@@ -328,6 +400,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Основная фаза UEFI, загружающая драйверы устройств (NVMe, PCIe, USB, FAT32/ESP, видео) и создающая таблицы сервисов.',
     details: 'Диспетчер DXE считывает HOB-список из PEI, строит карту системной памяти и загружает протоколы драйверов в память для последующего использования загрузчиком Windows.',
     structureOrRegister: 'DXE Dispatcher / EFI Protocols / EFI_HANDLE',
+    physicalLocation: 'Физическая оперативная память DRAM',
     relatedTerms: ['PEI', 'BDS', 'UEFI']
   },
   BDS: {
@@ -339,6 +412,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Финальная фаза прошивки, считывающая порядок загрузки из NVRAM, проверяющая Secure Boot и запускающая bootmgfw.efi.',
     details: 'Анализирует переменные BootOrder и Boot####. При включенном Secure Boot проверяет цифровую подпись загрузочного EFI-приложения и запускает его через gBS->StartImage().',
     structureOrRegister: 'BdsEntry / NVRAM BootOrder / EFI_LOADED_IMAGE',
+    physicalLocation: 'Физическая оперативная память DRAM + контроллер накопителя NVMe/SATA',
     relatedTerms: ['DXE', 'UEFI', 'BCD']
   },
   HOB: {
@@ -350,6 +424,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Структура данных, через которую фаза PEI передает информацию об обнаруженной физической памяти и железе фазе DXE.',
     details: 'Представляет собой связный список дескрипторов (EFI_HOB_GENERIC_HEADER), описывающих диапазоны RAM, статус загрузки и адреса прошивки.',
     structureOrRegister: 'EFI_HOB_MEMORY_ALLOCATION / HOB List Pointer',
+    physicalLocation: 'Буферы структур в оперативной памяти DRAM',
     relatedTerms: ['PEI', 'DXE']
   },
   MBR: {
@@ -361,6 +436,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Первый сектор накопителя (LBA 0, 512 байт) в устаревшей схеме разбиения BIOS, содержащий начальный код загрузки и таблицу из 4 разделов.',
     details: 'Код MBR загружается по фиксированному физическому адресу 0x7C00. Он находит активный раздел и передаёт управление сектору VBR (Volume Boot Record).',
     structureOrRegister: 'LBA 0 (Offset 0x01BE: Partition Table, Signature 0xAA55)',
+    physicalLocation: 'Первый физический сектор (LBA 0, 512 байт) на пластине HDD или NAND флеш-чипе SSD',
     relatedTerms: ['VBR', 'GPT']
   },
   GPT: {
@@ -372,6 +448,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Современный стандарт схемы размещения таблиц разделов на физическом накопителе, использующий 64-битные LBA-адреса и GUID-идентификаторы.',
     details: 'Заголовок GPT располагается в LBA 1 (резервная копия в конце диска), защищен контрольной суммой CRC32 и содержит массив до 128 дескрипторов разделов.',
     structureOrRegister: '_GPT_HEADER (LBA 1, Signature "EFI PART")',
+    physicalLocation: 'Секторы LBA 1–33 и последний сектор на физическом накопителе (SSD / HDD)',
     relatedTerms: ['MBR', 'UEFI', 'BCD']
   },
   VBR: {
@@ -383,6 +460,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Первый сектор активного дискового раздела, содержащий код загрузки конкретного менеджера (например, bootmgr).',
     details: 'Вызывается кодом MBR после проверки сигнатуры 0xAA55, считывает файл bootmgr в память и переходит на него в 16-битном Real Mode.',
     structureOrRegister: 'Boot Sector (BPB - BIOS Parameter Block)',
+    physicalLocation: 'Начальный физический сектор активного раздела накопителя (Volume Boot Record)',
     relatedTerms: ['MBR', 'BCD']
   },
   TPM: {
@@ -394,6 +472,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Аппаратный или микропрограммный чип безопасности для криптографического хранения ключей BitLocker, замеров загрузки (PCR) и аттестации платформы.',
     details: 'Каждый этап загрузки (UEFI, Bootmgr, Winload, Kernel) измеряет хеши последующих модулей и расширяет регистры PCR (Platform Configuration Registers). Ключ BitLocker расшифровывается только при совпадении PCR.',
     structureOrRegister: 'TPM 2.0 / PCR (0-23) / TIS (TPM Interface Specification)',
+    physicalLocation: 'Дискретная микросхема TPM 2.0 на материнской плате либо встроенный модуль fTPM/ME/PSP в кристалле CPU/чипсета',
     relatedTerms: ['VBS', 'FVE', 'BitLocker']
   },
   FVE: {
@@ -526,6 +605,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Стандарт описания конфигурации материнской платы, таблиц питания (DSDT, SSDT, MADT, FADT) и управления спящими режимами (S0-S5).',
     details: 'Драйвер acpi.sys парсит байткод AML (ACPI Machine Language), строит дерево устройств материнской платы и настраивает маршрутизацию прерываний через таблицу MADT.',
     structureOrRegister: 'RSDP / RSDT / XSDT / MADT / acpi.sys',
+    physicalLocation: 'Таблицы в оперативной памяти DRAM + контроллер чипсета материнской платы (PCH)',
     relatedTerms: ['HAL', 'PNP', 'APIC']
   },
   APIC: {
@@ -537,6 +617,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Аппаратный контроллер прерываний x86/x64, состоящий из Local APIC (в каждом ядре ЦП) и I/O APIC (в чипсете материнской платы).',
     details: 'Обеспечивает доставку аппаратных IRQ, межпроцессорных прерываний (IPI / Inter-Processor Interrupts) для синхронизации ядер CPU и локальных таймеров.',
     structureOrRegister: 'LAPIC Base MSR (0x1B / 0x800-0x83F в x2APIC) / I/O APIC',
+    physicalLocation: 'Локальные контроллеры LAPIC внутри каждого ядра CPU + чип I/O APIC в чипсете платы',
     relatedTerms: ['IDT', 'HAL', 'IRQL']
   },
   DMA: {
@@ -548,6 +629,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Аппаратный механизм, позволяющий периферийным контроллерам (NVMe, сетевые карты, GPU) передавать данные напрямую в/из RAM без участия CPU.',
     details: 'В Windows настраивается через объекты DMA_ADAPTER и списки дескрипторов MDL. Защищается с помощью IOMMU / DMA Remapping для предотвращения атак DMA-перехвата.',
     structureOrRegister: 'DMA_ADAPTER / AllocateAdapterChannel / IOMMU',
+    physicalLocation: 'Контроллеры периферийных устройств (NVMe, сетевые карты, GPU) на шине PCIe',
     relatedTerms: ['MDL', 'IOMMU']
   },
   IOMMU: {
@@ -559,6 +641,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Аппаратный блок процессора/чипсета (Intel VT-d, AMD-Vi), транслирующий адреса DMA и изолирующий устройства от несанкционированного доступа к системной памяти.',
     details: 'Используется подсистемами безопасности Windows (Kernel DMA Protection, HVCI, VBS) для изоляции памяти ядра от вредоносных PCIe-устройств (Thunderbolt/USB4 DMA Protection).',
     structureOrRegister: 'Intel VT-d / AMD-Vi / HalpIommuInterface',
+    physicalLocation: 'Аппаратный блок DMA-трансляции (Intel VT-d / AMD-Vi) в кристалле CPU / чипсете',
     relatedTerms: ['DMA', 'VBS', 'HAL']
   },
   NTOSKRNL: {
@@ -581,6 +664,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Низкоуровневая прошивка материнской платы, хранящаяся в SPI Flash чипе и выполняющая начальный запуск аппаратных узлов компьютера.',
     details: 'Включает фазы SEC, PEI, DXE, BDS. Проверяет цифровую подпись Boot Manager и передаёт управление загрузчику bootmgfw.efi.',
     structureOrRegister: 'SPI Flash ROM / UEFI Specifications',
+    physicalLocation: 'Микросхема SPI Flash ROM (8–32 МБ) с интерфейсом SPI на материнской плате',
     relatedTerms: ['UEFI', 'SEC', 'PEI', 'DXE', 'BDS']
   },
   SPD: {
@@ -592,6 +676,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Микросхема EEPROM на модуле оперативной памяти, хранящая профили JEDEC/XMP, тайминги, напряжение и поддерживаемую частоту.',
     details: 'Модули фазы PEI опрашивают чипы SPD по шине SMBus/I2C, чтобы правильно настроить контроллер памяти (DRAM Controller) и применить стабильные тайминги CL-tRCD-tRP-tRAS.',
     structureOrRegister: 'SMBus / I2C EEPROM (JEDEC SPD / Intel XMP / AMD EXPO)',
+    physicalLocation: 'Микросхема EEPROM (8-pin SOIC) на текстолите планки памяти RAM (DIMM)',
     relatedTerms: ['PEI', 'PEIM', 'DRAM', 'CAR']
   },
   ESP: {
@@ -603,6 +688,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Специальный раздел диска (FAT32), помеченный GUID c12a7328-f81f-11d2-ba4b-00a0c93ec93b, где хранятся загрузчики bootmgfw.efi и BCD.',
     details: 'Прошивка UEFI монтирует раздел ESP с помощью встроенного FAT-драйвера, считывает файл конфигурации BCD и исполняет загрузочный образ операционной системы.',
     structureOrRegister: 'FAT32 Partition / \\EFI\\Microsoft\\Boot\\bootmgfw.efi',
+    physicalLocation: 'Физический раздел FAT32 на твердотельном накопителе (NVMe / SATA SSD)',
     relatedTerms: ['UEFI', 'GPT', 'BCD', 'bootmgr']
   },
   NVME: {
@@ -614,6 +700,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Высокоскоростной протокол прямого доступа к SSD-накопителям через шину PCIe с аппаратными очередями команд (до 64K очередей по 64K команд).',
     details: 'Поддерживает низкие задержки за счёт прямого DMA-доступа к памяти хоста и параллельной обработки запросов без блокировок.',
     structureOrRegister: 'PCIe NVMe Controller / Submission & Completion Queues / stornvme.sys',
+    physicalLocation: 'Контроллер SSD-накопителя в слоте M.2 / PCIe + микросхемы флеш-памяти 3D NAND',
     relatedTerms: ['PCIE', 'DMA', 'AHCI']
   },
   PCIE: {
@@ -625,6 +712,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Основная системная высокоскоростная шина последовательной передачи данных (Point-to-Point) для видеокарт, NVMe-накопителей и сетевых адаптеров.',
     details: 'Конфигурационное пространство PCIe (ECAM / Enhanced Configuration Access Mechanism) мапится в память (MMIO) и перечисляется драйвером pci.sys на фазе 1 ядра.',
     structureOrRegister: 'PCIe ECAM / pci.sys / Root Complex',
+    physicalLocation: 'Физические дифференциальные линии шины PCIe на плате + контроллер PCIe в CPU/чипсете',
     relatedTerms: ['NVME', 'IOMMU', 'DMA', 'PNP']
   },
   AHCI: {
@@ -636,6 +724,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Аппаратный механизм взаимодействия контроллеров накопителей Serial ATA (SATA) с операционной системой с поддержкой Native Command Queuing (NCQ).',
     details: 'Инициализируется DXE-драйвером на этапе прошивки и драйвером storahci.sys в ядре Windows.',
     structureOrRegister: 'storahci.sys / PCI Configuration Space',
+    physicalLocation: 'SATA-контроллер, интегрированный в чипсет материнской платы (PCH)',
     relatedTerms: ['NVME', 'DMA', 'PCIE']
   },
   LBA: {
@@ -647,6 +736,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Схема адресации секторов накопителя от LBA 0 (первый сектор диска) до конца объёма, пришедшая на замену CHS (Cylinder-Head-Sector).',
     details: 'В MBR LBA ограничена 32 битами (максимум 2 ТБ), в таблицах GPT используются 64-битные LBA-адреса, снимающие ограничения на объём дисков.',
     structureOrRegister: 'LBA 0 (MBR), LBA 1 (GPT Header), LBA 2-33 (Partition Entries)',
+    physicalLocation: 'Физическая адресация блоков на флеш-памяти NAND SSD или магнитных пластинах HDD',
     relatedTerms: ['MBR', 'GPT', 'VBR']
   },
   CRC32: {
@@ -702,6 +792,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Энергонезависимые регистры TPM (0-23), хранящие криптографические хеши (SHA-256) измерений каждого этапа загрузки платформы.',
     details: 'Регистры расширяются операцией TPM_Extend (PCR_new = SHA256(PCR_old || measurement)). Пакет BitLocker запечатывает ключ шифрования под конкретные значения PCR (0: Firmware, 2: Option ROMs, 4: Boot Manager, 7: Secure Boot, 11: BitLocker Access Control).',
     structureOrRegister: 'TPM2_PCR_Extend / PCR 0-23',
+    physicalLocation: 'Энергонезависимые регистры внутри кристалла доверенного модуля TPM (на плате или в CPU)',
     relatedTerms: ['TPM', 'FVE', 'VBS']
   },
   AUTHENTICODE: {
@@ -724,6 +815,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Единственное физическое/логическое ядро CPU, выбираемое аппаратной логикой платформы при старте для выполнения инициализации UEFI и Phase 0 ядра.',
     details: 'Остальные ядра процессора (AP) находятся в состоянии ожидания (Wait-for-SIPI) и запускаются загрузчиком Phase 1 только после поднятия базовых структур ядра.',
     structureOrRegister: 'IA32_APIC_BASE_MSR (0x1B, Bit 8: BSP Flag)',
+    physicalLocation: 'Выделенное аппаратное ядро (Core 0) на кремниевом кристалле процессора (CPU)',
     relatedTerms: ['AP', 'APIC', 'KPCR']
   },
   AP: {
@@ -735,6 +827,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Дополнительные вычислительные ядра ЦП, инициализируемые на фазе Phase 1 через межпроцессорные прерывания INIT-SIPI-SIPI.',
     details: 'После получения вектора SIPI ядро AP настраивает собственный KPCR, регистр CR3, стек, IDT и подключается к общему планировщику потоков ядра.',
     structureOrRegister: 'INIT-SIPI Sequence / HalStartDynamicProcessor',
+    physicalLocation: 'Вторичные вычислительные ядра (Core 1..N) на кремниевом кристалле процессора',
     relatedTerms: ['BSP', 'APIC', 'IPI', 'KPRCB']
   },
   IPI: {
@@ -746,6 +839,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Аппаратный механизм, позволяющий одному ядру CPU посылать прерывание другим ядрам через локальный контроллер прерываний APIC.',
     details: 'Используется ядром Windows для синхронизации TLB (TLB Shootdown), переключения контекста, запуска DPC на целевых ядрах и остановки CPU при BSOD/отладке.',
     structureOrRegister: 'LAPIC ICR (Interrupt Command Register) / KiIpiSend',
+    physicalLocation: 'Внутренняя шина межъядерной связи / APIC bus на кристалле CPU',
     relatedTerms: ['APIC', 'DPC', 'AP', 'IRQL']
   },
   PML4: {
@@ -757,6 +851,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Корневая 4-килобайтная таблица трансляции виртуальных адресов памяти в 64-битном режиме процессора (адресуется регистром CR3).',
     details: 'Содержит 512 64-битных записей PML4E, каждая из которых адресует 512 ГБ виртуальной памяти (всего покрывая 256 ТБ).',
     structureOrRegister: 'CR3 / PML4E / PDPTE',
+    physicalLocation: 'Таблица в физической оперативной памяти DRAM (базовый адрес в регистре CR3)',
     relatedTerms: ['CR3', 'PTE', 'PFN']
   },
   NX: {
@@ -768,6 +863,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Бит 63 в записях таблиц страниц памяти (PTE), аппаратно блокирующий выполнение кода из сегментов данных (стек, куча, буферы).',
     details: 'Активируется битом EFER.NXE в процессоре. Предотвращает эксплойты переполнения буфера (Buffer Overflow / Shellcode Injection).',
     structureOrRegister: 'IA32_EFER.NXE (MSR 0xC0000080, Bit 11) / PTE Bit 63',
+    physicalLocation: 'Бит 63 в аппаратных дескрипторах таблиц страниц в DRAM / регистр EFER в CPU',
     relatedTerms: ['PTE', 'CR3', 'HVCI']
   },
   SMM: {
@@ -779,6 +875,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Высокопривилегированный режим процессора x86, исполняющий закрытый код прошивки при получении прерывания SMI (System Management Interrupt).',
     details: 'Код SMM изолирован в защищенной памяти SMRAM. Используется для аппаратного термоконтроля, обновления BIOS и эмуляции оборудования.',
     structureOrRegister: 'SMI / SMRAM / RSM Instruction',
+    physicalLocation: 'Изолированный регион оперативной памяти SMRAM (TSEG) + микрокод процессора',
     relatedTerms: ['UEFI', 'SEC']
   },
   SAM: {
@@ -889,6 +986,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Криптографическая основа безопасности платформы, зашитая в неизменяемую память процессора/чипсета (Boot Guard / AMD PSB / TPM).',
     details: 'Проверяет подпись первого исполняемого блока кода прошивки до старта CPU, защищая систему от компрометации на уровне аппаратных атак.',
     structureOrRegister: 'Intel Boot Guard / AMD Platform Secure Boot / TPM Root Key',
+    physicalLocation: 'Аппаратные криптографические ключи в неизменяемых плавких перемычках (eFuses) CPU / чипсета',
     relatedTerms: ['SEC', 'UEFI', 'TPM', 'VBS']
   },
   "SECURE BOOT": {
@@ -900,6 +998,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Протокол безопасности UEFI, запрещающий запуск загрузчиков и драйверов без действительной цифровой подписи доверенного центра сертификации.',
     details: 'Прошивка сверяет подпись каждого EFI-файла с базами ключей PK (Platform Key), KEK (Key Exchange Key) и db (Authorized Signatures).',
     structureOrRegister: 'NVRAM SecureBoot / PK / KEK / db / dbx',
+    physicalLocation: 'Энергонезависимая память NVRAM в чипе SPI Flash ROM на материнской плате',
     relatedTerms: ['UEFI', 'BDS', 'TPM', 'AUTHENTICODE']
   },
   SECUREBOOT: {
@@ -911,6 +1010,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Протокол безопасности UEFI, запрещающий запуск загрузчиков и драйверов без действительной цифровой подписи доверенного центра сертификации.',
     details: 'Прошивка сверяет подпись каждого EFI-файла с базами ключей PK (Platform Key), KEK (Key Exchange Key) и db (Authorized Signatures).',
     structureOrRegister: 'NVRAM SecureBoot / PK / KEK / db / dbx',
+    physicalLocation: 'Энергонезависимая память NVRAM в чипе SPI Flash ROM на материнской плате',
     relatedTerms: ['UEFI', 'BDS', 'TPM', 'AUTHENTICODE']
   },
   BITLOCKER: {
@@ -955,6 +1055,7 @@ export const GLOSSARY_DATA: Record<string, GlossaryEntry> = {
     summary: 'Основная физическая оперативная память компьютера (DDR4 / DDR5), требующая периодической регенерации заряда ячеек.',
     details: 'Инициализируется на фазе PEI модулями PEIM после считывания профилей и таймингов из микросхем SPD. До инициализации DRAM процессор использует свой кэш в качестве временного стека памяти (CAR / Cache-as-RAM).',
     structureOrRegister: 'Memory Controller / DDR PHY / JEDEC SPD',
+    physicalLocation: 'Микросхемы динамической памяти (DDR4 / DDR5) на планках RAM (DIMM / SO-DIMM)',
     relatedTerms: ['SPD', 'CAR', 'PEI', 'PEIM']
   }
 };

@@ -276,9 +276,3 @@ flowchart TD
         EX1 --> EX7["SHDesktopMessageLoop (Main Windows Message Loop)"]
     end
 ```
-
----
-
-## 3. Интерактивная карта компонентов
-
-<BootFlowGraph />

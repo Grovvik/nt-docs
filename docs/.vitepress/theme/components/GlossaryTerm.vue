@@ -19,6 +19,31 @@ const item = computed<GlossaryEntry | null>(() => {
   return GLOSSARY_DATA[key] || null
 })
 
+const getLeftBoundary = (): number => {
+  const padding = 12
+  const sidebar = document.querySelector('.VPSidebar')
+  if (sidebar) {
+    const rect = sidebar.getBoundingClientRect()
+    // If sidebar is visible on the left side of the screen
+    if (rect.width > 0 && rect.right > 0 && rect.left >= -10 && rect.right < window.innerWidth / 2) {
+      return rect.right + padding
+    }
+  }
+  return padding
+}
+
+const getRightBoundary = (viewportWidth: number): number => {
+  const padding = 12
+  const aside = document.querySelector('.VPDocAside') || document.querySelector('.aside')
+  if (aside) {
+    const rect = aside.getBoundingClientRect()
+    if (rect.width > 0 && rect.left > 0 && rect.left < viewportWidth && rect.left > viewportWidth / 2) {
+      return rect.left - padding
+    }
+  }
+  return viewportWidth - padding
+}
+
 const getHeaderBottom = (): number => {
   const nav = document.querySelector('.VPNav') || document.querySelector('.VPNavBar') || document.querySelector('header')
   if (nav) {
@@ -36,11 +61,14 @@ const updatePopoverPosition = () => {
   const viewportHeight = window.innerHeight
 
   const padding = 12
-  const popoverWidth = Math.min(340, viewportWidth - padding * 2)
+  const safeLeft = getLeftBoundary()
+  const safeRight = getRightBoundary(viewportWidth)
+  const availableWidth = Math.max(260, safeRight - safeLeft)
+  const popoverWidth = Math.min(340, availableWidth)
 
-  // Horizontal position calculation
+  // Horizontal position calculation: clamp strictly between safeLeft and safeRight
   let targetScreenLeft = rect.left + rect.width / 2 - popoverWidth / 2
-  targetScreenLeft = Math.max(padding, Math.min(targetScreenLeft, viewportWidth - padding - popoverWidth))
+  targetScreenLeft = Math.max(safeLeft, Math.min(targetScreenLeft, safeRight - popoverWidth))
   const relativeLeft = targetScreenLeft - rect.left
 
   // Arrow position pointing to trigger center
@@ -182,6 +210,11 @@ const getLayerBadgeColor = (layer: string) => {
             <code class="meta-code">{{ item.structureOrRegister }}</code>
           </div>
 
+          <div v-if="item.physicalLocation" class="popover-meta-row location-row">
+            <span class="meta-label">📍 Физическое размещение:</span>
+            <span class="meta-location-text">{{ item.physicalLocation }}</span>
+          </div>
+
           <p class="popover-details">{{ item.details }}</p>
 
           <div v-if="item.relatedTerms && item.relatedTerms.length" class="popover-related">
@@ -235,7 +268,7 @@ const getLayerBadgeColor = (layer: string) => {
   border: 1px solid var(--vp-c-border);
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-  z-index: 18;
+  z-index: 50;
   padding: 16px;
   color: var(--vp-c-text-1);
   font-size: 13px;
@@ -380,6 +413,23 @@ const getLayerBadgeColor = (layer: string) => {
   border: 1px solid var(--vp-c-border);
   box-sizing: border-box;
   max-width: 100%;
+}
+
+.popover-meta-row.location-row {
+  background: rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.2);
+}
+
+.dark .popover-meta-row.location-row {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+.meta-location-text {
+  color: var(--vp-c-text-1);
+  font-weight: 500;
+  font-size: 11px;
+  word-break: break-word;
 }
 
 .meta-label {
