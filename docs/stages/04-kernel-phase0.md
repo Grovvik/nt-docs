@@ -1,12 +1,12 @@
 # 4. Kernel Phase 0 Initialization (`ntoskrnl.exe`)
 
-Фаза 0 инициализации ядра это фундаментальный этап старта ОС, выполняемый на загрузочном процессоре (BSP) при заблокированных прерываниях (<Term term="IRQL">IRQL HIGH_LEVEL</Term>).
+Фаза 0 инициализации ядра начинается при переданном загрузчиком уровне прерываний `CR8 = 0` (`PASSIVE_LEVEL`), после чего на раннем этапе `KiSystemStartup` повышает приоритет до <Term term="IRQL">IRQL HIGH_LEVEL (15)</Term>, изолируя исполнение и структуры ядра на главном процессоре (BSP).
 
 ---
 
 ## 4.1 Архитектура Phase 0
 
-На этапе Phase 0 ядро переходит из примитивного окружения загрузчика в защищённый режим NT:
+На этапе Phase 0 ядро переходит из первичного окружения загрузчика в штатное исполнительное окружение ядра NT (Ring 0 / Supervisor Mode):
 
 ```
 [ winload.efi: OslArchTransferToKernel ]
@@ -40,14 +40,17 @@
 
 ## 4.2 Декомпилированный C-код ядра (Phase 0)
 
+> **Целевая сборка**: Windows 10 22H2 x64 (Build `10.0.19045.2965`). Имена внутренних функций и абсолютные RVA-адреса зависят от версии сборки.  
+> **Конвенция вызовов**: На платформе Windows x64 действует унифицированный Microsoft x64 ABI; ключевые слова `__fastcall` / `__stdcall` в декомпиляторе отражают исходные декораторы типов.
+
 ### 1. Точка входа ядра: `KiSystemStartup`
 
 <FunctionCard 
   name="KiSystemStartup"
   module="ntoskrnl.exe"
-  :exported="true"
-  prototype="NTSTATUS __stdcall __noreturn KiSystemStartup(PLOADER_PARAMETER_BLOCK LoaderBlock)"
-  irql="HIGH_LEVEL (15/31)"
+  :exported="false"
+  prototype="VOID __noreturn KiSystemStartup(PLOADER_PARAMETER_BLOCK LoaderBlock)"
+  irql="Entry: CR8=0 ➔ HIGH_LEVEL (15)"
   caller="winload.efi: OslArchTransferToKernel"
   phase="Phase 0 Core Entry"
 >
@@ -57,13 +60,14 @@
 <DecompiledCode 
   name="KiSystemStartup"
   module="ntoskrnl.exe"
-  callingConvention="__stdcall __noreturn"
-  :isExported="true"
+  callingConvention="__noreturn"
+  :isExported="false"
   summary="Точка входа ядра: чтение регистров ЦП, настройка сегмента GS/KPCR и вызов KiInitializeKernel"
 >
 
 ```c
-NTSTATUS __stdcall __noreturn KiSystemStartup(PLOADER_PARAMETER_BLOCK LoaderBlock)
+// Источник: source/ntoskrnl.exe/Ki/KiSystemStartup_14098C010.c
+void __noreturn KiSystemStartup(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   PKPRCB Prcb;
   PKPCR Pcr;

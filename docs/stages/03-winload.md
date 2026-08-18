@@ -407,7 +407,7 @@ void OslArchTransferToKernel(PLOADER_PARAMETER_BLOCK LoaderBlock, PVOID KernelEn
 
   // [7] Нормализация расширений архитектуры в IA32_EFER MSR (0xC0000080) для контекста ядра:
   // IA32_EFER.SCE (бит 0 - SYSCALL/SYSRET Enable)
-  // IA32_EFER.LME (бит 8 - Long Mode Active)
+  // IA32_EFER.LME (бит 8 - Long Mode Enable; процессор уже исполняет x64 код с аппаратным LMA=1)
   // IA32_EFER.NXE (бит 11 - No-Execute Protection Enable)
   __writemsr(0xC0000080, __readmsr(0xC0000080) | (unsigned int)OslArchEferFlags);
 

@@ -37,7 +37,8 @@ Boot Manager собран на базе библиотеки <Term term="BOOTLIB
 
 ## 2.2 Декомпилированный C-код ключевых функций Boot Manager
 
-Все функции получены в результате декомпиляции официального бинарного файла `bootmgfw.efi` (Windows 10/11 x64). Имена переменных нормализованы, код структурирован и снабжен комментариями.
+> **Целевая сборка**: Windows 10 22H2 x64 (Build `10.0.19045.2965`). Имена внутренних функций и абсолютные RVA-адреса зависят от версии сборки.  
+> **Конвенция вызовов**: На платформе Windows x64 действует унифицированный Microsoft x64 ABI; ключевые слова `__fastcall` в декомпиляторе отражают исходные сигнатуры типов.
 
 ---
 
@@ -46,7 +47,7 @@ Boot Manager собран на базе библиотеки <Term term="BOOTLIB
 <FunctionCard 
   name="BmMain"
   module="bootmgfw.efi"
-  :exported="true"
+  :exported="false"
   prototype="NTSTATUS __fastcall BmMain(PBOOT_APPLICATION_PARAMETER_BLOCK BootAppParameters)"
   irql="UEFI Context"
 >
@@ -57,7 +58,7 @@ Boot Manager собран на базе библиотеки <Term term="BOOTLIB
   name="BmMain"
   module="bootmgfw.efi"
   callingConvention="__fastcall"
-  :isExported="true"
+  :isExported="false"
   summary="Главная функция Boot Manager: инициализация BootLib, чтение BCD, проверка TPM/BitLocker и диспетчеризация запуска"
 >
 
