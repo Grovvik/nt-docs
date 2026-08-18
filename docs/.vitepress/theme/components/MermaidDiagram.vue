@@ -151,7 +151,11 @@ const renderDiagram = async () => {
         curve: 'basis',
         nodeSpacing: 35,
         rankSpacing: 45,
-        padding: 16
+        padding: 12,
+        subGraphTitleMargin: {
+          top: 15,
+          bottom: 15
+        }
       }
     })
 
@@ -489,28 +493,80 @@ onUnmounted(() => {
   overflow: visible !important;
 }
 
-.svg-vector-host :deep(.node foreignObject div),
-.svg-vector-host :deep(.node .label),
-.svg-vector-host :deep(.node .label div),
-.svg-vector-host :deep(.node .label span),
-.svg-vector-host :deep(.node .label p),
-.svg-vector-host :deep(.node text),
-.svg-vector-host :deep(.node tspan) {
-  line-height: 1.25 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  box-sizing: border-box !important;
-  word-break: normal !important;
-  white-space: normal !important;
-}
-
-.svg-vector-host :deep(.node foreignObject div) {
+.svg-vector-host :deep(.node foreignObject > div) {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
+  width: 100% !important;
   height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.svg-vector-host :deep(.node .nodeLabel),
+.svg-vector-host :deep(.node foreignObject div),
+.svg-vector-host :deep(.node foreignObject span),
+.svg-vector-host :deep(.node foreignObject p),
+.svg-vector-host :deep(.node text),
+.svg-vector-host :deep(.node tspan) {
+  display: block !important;
+  width: 100% !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  line-height: 1.3 !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+.svg-vector-host :deep(.node .nodeLabel b),
+.svg-vector-host :deep(.node .nodeLabel span),
+.svg-vector-host :deep(.node .nodeLabel i) {
+  display: inline !important;
+  line-height: inherit !important;
+  text-align: center !important;
+}
+
+/* Edge labels styling */
+.svg-vector-host :deep(.edgeLabel) {
+  background: transparent !important;
+  color: var(--vp-c-text-1) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  overflow: visible !important;
+}
+
+.svg-vector-host :deep(.edgeLabel foreignObject) {
+  overflow: visible !important;
+  background: transparent !important;
+}
+
+.svg-vector-host :deep(.edgeLabel foreignObject div) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.svg-vector-host :deep(.edgeLabel foreignObject div span),
+.svg-vector-host :deep(.edgeLabel > span) {
+  display: inline-block !important;
+  background-color: var(--vp-c-bg-elv) !important;
+  color: var(--vp-c-text-1) !important;
+  border: 1px solid var(--vp-c-border) !important;
+  border-radius: 6px !important;
+  padding: 2px 8px !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
 }
 
 .svg-vector-host :deep(.node rect),
