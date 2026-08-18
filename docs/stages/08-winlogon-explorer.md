@@ -844,4 +844,4 @@ $$\text{UEFI Firmware} \longrightarrow \text{bootmgfw.efi} \longrightarrow \text
 Вы можете изучить:
 - **[Интерактивный глоссарий всех терминов ядра](/glossary/)**
 - **[Низкоуровневые структуры данных (KPCR, KPRCB, IRP, VAD)](/reference/structures)**
-- **[Полный граф вызовов функций](/reference/flowchart)**
+- **[Сквозная архитектурная карта cold-boot загрузки](/stages/01-firmware-uefi-mbr#_1-1-сквозная-архитектурная-карта-cold-boot-загрузки-uefi-x64)**
