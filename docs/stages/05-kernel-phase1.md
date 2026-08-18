@@ -53,7 +53,6 @@
 >
 
 ```c
-// Источник: source/ntoskrnl.exe/_Other/Phase1InitializationDiscard_140A37B24.c
 BOOLEAN __fastcall Phase1InitializationDiscard(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   NTSTATUS Status;
@@ -166,7 +165,6 @@ BOOLEAN __fastcall Phase1InitializationDiscard(PLOADER_PARAMETER_BLOCK LoaderBlo
 >
 
 ```c
-// Источник: source/ntoskrnl.exe/_Other/StartFirstUserProcess_140A44218.c
 VOID StartFirstUserProcess(VOID)
 {
   NTSTATUS Status;

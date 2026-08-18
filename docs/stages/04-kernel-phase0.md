@@ -63,7 +63,6 @@
 >
 
 ```c
-// Источник: source/ntoskrnl.exe/Ki/KiSystemStartup_14098C010.c
 NTSTATUS __stdcall __noreturn KiSystemStartup(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   PKPRCB Prcb;
@@ -211,7 +210,6 @@ NTSTATUS __stdcall __noreturn KiSystemStartup(PLOADER_PARAMETER_BLOCK LoaderBloc
 >
 
 ```c
-// Источник: source/ntoskrnl.exe/Init/InitBootProcessor_140A36F64.c
 NTSTATUS __fastcall InitBootProcessor(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   NTSTATUS Status;
