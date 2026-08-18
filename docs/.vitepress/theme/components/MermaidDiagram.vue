@@ -18,6 +18,7 @@ const scale = ref<number>(1)
 const panX = ref<number>(0)
 const panY = ref<number>(0)
 const isDragging = ref<boolean>(false)
+const isFullscreen = ref<boolean>(false)
 const startDragX = ref<number>(0)
 const startDragY = ref<number>(0)
 
@@ -74,13 +75,13 @@ const centerDiagram = () => {
     const bbox = (rootG as SVGGraphicsElement).getBBox()
     if (!bbox || bbox.width === 0) return
 
-    const padding = 60
+    const padding = isFullscreen.value ? 80 : 60
     const availableWidth = Math.max(100, viewport.width - padding)
     const availableHeight = Math.max(100, viewport.height - padding)
 
     const initialScale = Math.min(
-      1.05,
-      Math.max(0.2, Math.min(availableWidth / bbox.width, availableHeight / bbox.height))
+      isFullscreen.value ? 1.25 : 1.05,
+      Math.max(0.15, Math.min(availableWidth / bbox.width, availableHeight / bbox.height))
     )
 
     scale.value = initialScale
@@ -284,6 +285,41 @@ const resetView = () => {
   centerDiagram()
 }
 
+const toggleFullscreen = async () => {
+  if (!viewportRef.value) return
+
+  if (!isFullscreen.value) {
+    try {
+      if (viewportRef.value.requestFullscreen) {
+        await viewportRef.value.requestFullscreen()
+      }
+    } catch (e) {}
+    isFullscreen.value = true
+  } else {
+    try {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        await document.exitFullscreen()
+      }
+    } catch (e) {}
+    isFullscreen.value = false
+  }
+
+  nextTick(() => {
+    setTimeout(() => {
+      centerDiagram()
+    }, 80)
+  })
+}
+
+const onFullscreenChange = () => {
+  isFullscreen.value = !!document.fullscreenElement
+  nextTick(() => {
+    setTimeout(() => {
+      centerDiagram()
+    }, 80)
+  })
+}
+
 watch(isDark, () => {
   nextTick(() => renderDiagram())
 })
@@ -295,11 +331,13 @@ watch(() => props.code, () => {
 onMounted(() => {
   nextTick(() => renderDiagram())
   window.addEventListener('resize', centerDiagram)
+  document.addEventListener('fullscreenchange', onFullscreenChange)
 })
 
 onUnmounted(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('resize', centerDiagram)
+    document.removeEventListener('fullscreenchange', onFullscreenChange)
   }
 })
 </script>
@@ -309,7 +347,7 @@ onUnmounted(() => {
     <div
       ref="viewportRef"
       class="canvas-viewport"
-      :class="{ 'is-dragging': isDragging }"
+      :class="{ 'is-dragging': isDragging, 'is-fullscreen': isFullscreen }"
       @wheel="onWheel"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
@@ -338,18 +376,14 @@ onUnmounted(() => {
 
       <!-- Floating Canvas HUD Controls -->
       <div class="canvas-hud">
-        <div class="hud-hint">
-          <span class="hud-dot"></span>
-          <span>Колёсико: зум • Зажатие ЛКМ: перемещение • Двойной клик: центрировать</span>
-        </div>
         <div class="hud-buttons">
-          <button class="hud-btn" @click.stop="zoomOut" title="Уменьшить">
+          <button class="hud-btn" @click.stop="zoomOut" title="Уменьшить (-)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
           </button>
           <span class="hud-scale">{{ Math.round(scale * 100) }}%</span>
-          <button class="hud-btn" @click.stop="zoomIn" title="Увеличить">
+          <button class="hud-btn" @click.stop="zoomIn" title="Увеличить (+)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -357,6 +391,16 @@ onUnmounted(() => {
           </button>
           <button class="hud-btn hud-btn-fit" @click.stop="resetView" title="Сбросить и отцентрировать">
             Центр
+          </button>
+          <button class="hud-btn" @click.stop="toggleFullscreen" :title="isFullscreen ? 'Свернуть' : 'На весь экран'">
+            <!-- Exit Fullscreen Icon -->
+            <svg v-if="isFullscreen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+            </svg>
+            <!-- Enter Fullscreen Icon -->
+            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -384,6 +428,27 @@ onUnmounted(() => {
   user-select: none;
   touch-action: none;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  transition: border-radius 0.2s ease;
+}
+
+.canvas-viewport.is-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0 !important;
+  border: none !important;
+  z-index: 99999 !important;
+  box-shadow: none !important;
+}
+
+.canvas-viewport:fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0 !important;
+  border: none !important;
 }
 
 .canvas-viewport.is-dragging {
@@ -466,27 +531,6 @@ onUnmounted(() => {
   align-items: center;
   pointer-events: none;
   gap: 12px;
-}
-
-.hud-hint {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  color: var(--vp-c-text-2);
-  background: var(--vp-c-bg-elv);
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--vp-c-border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(8px);
-}
-
-.hud-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--vp-c-brand-1);
 }
 
 .hud-buttons {
