@@ -18,14 +18,14 @@
            ├── CreateDesktopW("Winlogon") -> Защищенный десктоп
            │
            ├── [ 1. services.exe ] -> Service Control Manager (SCM)
-           │       ├── Инициализация <Term term="RPC">RPC</Term>-сервера диспетчера служб
+           │       ├── Инициализация RPC-сервера диспетчера служб
            │       ├── Загрузка драйверов типа SERVICE_SYSTEM_START
            │       └── Запуск фоновых служб типа SERVICE_AUTO_START (RPCSS, DcomLaunch, EventLog)
            │
            ├── [ 2. lsass.exe ] -> Local Security Authority Subsystem (LSASS)
-           │       ├── Инициализация базы <Term term="SAM">SAM</Term>
+           │       ├── Инициализация базы SAM
            │       ├── Загрузка пакетов безопасности SSP/AP (Kerberos, NTLM, Schannel)
-           │       └── Создание защищенных токенов доступа (Tokens / <Term term="SID">SIDs</Term>)
+           │       └── Создание защищенных токенов доступа (Tokens / SIDs)
            │
            └── [ 3. lsm.exe ] -> Local Session Manager
                    └── Управление жизненным циклом сессий RDP и локальных терминалов

@@ -20,17 +20,17 @@
                     │
                     ▼
 [ KiInitializeKernel (0x1409999E0) ]
-   ├── Инициализация <Term term="KPRCB">KPRCB</Term> (очереди <Term term="DPC">DPC</Term>, таймеры, списки потоков)
-   ├── Настройка поддержки XSave, <Term term="NX">NX</Term>, Speculation Control (Spectre/Meltdown)
+   ├── Инициализация KPRCB (очереди DPC, таймеры, списки потоков)
+   ├── Настройка поддержки XSave, NX, Speculation Control (Spectre/Meltdown)
    ├── Создание начального контекста процесса System (Idle Process / Idle Thread)
    └── Вызов InitBootProcessor
                     │
                     ▼
 [ InitBootProcessor (0x140A36F64) ]
-   ├── HalInitSystem(0, LoaderBlock) -> Базовая настройка контроллера прерываний <Term term="HAL">HAL</Term>
+   ├── HalInitSystem(0, LoaderBlock) -> Базовая настройка контроллера прерываний HAL
    ├── KeInitSystem(0) & CmInitSystem0(LoaderBlock) -> Ранний куст реестра SYSTEM
    ├── ExInitSystem() -> Инициализация Executive (ExpInitSystemPhase0)
-   ├── MmInitSystem(0, LoaderBlock) -> <Term term="PFN">PFN</Term>-база, NonPagedPool, PagedPool, <Term term="VAD">VAD</Term>
+   ├── MmInitSystem(0, LoaderBlock) -> PFN-база, NonPagedPool, PagedPool, VAD
    ├── ObInitSystem(0) -> Корневой каталог объектов \ и типы объектов (Directory, Type)
    ├── SeInitSystem(0) -> Подсистема безопасности, дескрипторы и токены
    └── PsInitSystem(0, LoaderBlock) -> Создание первого системного процесса (System)

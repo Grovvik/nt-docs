@@ -11,13 +11,15 @@ interface Stage {
   description: string
 }
 
+const base = '/nt-docs/';
+
 const stages: Stage[] = [
   {
     id: 'firmware',
     title: '1. Firmware & UEFI / MBR',
     subtitle: 'SEC -> PEI -> DXE -> BDS',
     layer: 'Firmware',
-    link: '/stages/01-firmware-uefi-mbr',
+    link: base + 'stages/01-firmware-uefi-mbr',
     keyFunctions: ['SecStartup', 'PeiMain', 'DxeMain', 'BdsEntry', 'bootx64.efi'],
     description: 'Инициализация чипсета, памяти, проверка Secure Boot, выбор загрузочного диска (GPT/MBR) и запуск bootmgfw.efi.'
   },
@@ -26,7 +28,7 @@ const stages: Stage[] = [
     title: '2. Windows Boot Manager',
     subtitle: 'bootmgr.efi / bootmgr',
     layer: 'Loader',
-    link: '/stages/02-bootmgr',
+    link: base + 'stages/02-bootmgr',
     keyFunctions: ['BmMain', 'BmOpenBootConfigurationDataStore', 'BmFveOpenVolume', 'BmLaunchBootApplication'],
     description: 'Чтение базы BCD, разблокировка BitLocker TPM, отображение меню загрузки и запуск winload.efi.'
   },
@@ -35,7 +37,7 @@ const stages: Stage[] = [
     title: '3. Windows OS Loader',
     subtitle: 'winload.efi',
     layer: 'Loader',
-    link: '/stages/03-winload',
+    link: base + 'stages/03-winload',
     keyFunctions: ['OslMain', 'OslLoadAndInitializeKernel', 'OslpLoadBootDrivers', 'BlMmExitBootServices'],
     description: 'Загрузка ntoskrnl.exe, hal.dll, SYSTEM hive, BOOT_START драйверов, маппинг страниц памяти, LOADER_PARAMETER_BLOCK, вызов ExitBootServices.'
   },
@@ -44,7 +46,7 @@ const stages: Stage[] = [
     title: '4. Kernel Phase 0 Initialization',
     subtitle: 'ntoskrnl.exe (Single CPU, IRQL HIGH)',
     layer: 'Ring 0',
-    link: '/stages/04-kernel-phase0',
+    link: base + 'stages/04-kernel-phase0',
     keyFunctions: ['KiSystemStartup', 'KiInitializeKernel', 'InitBootProcessor', 'HalInitSystem(0)', 'MmInitSystem(0)'],
     description: 'Настройка KPCR, IDT, GDT, TSS, CR3, базовая инициализация памяти Mm, объектов Ob, процессов Ps, безопасности Se.'
   },
@@ -53,7 +55,7 @@ const stages: Stage[] = [
     title: '5. Kernel Phase 1 & Subsystems',
     subtitle: 'ntoskrnl.exe (Multi-CPU, IRQL PASSIVE)',
     layer: 'Ring 0',
-    link: '/stages/05-kernel-phase1',
+    link: base + 'stages/05-kernel-phase1',
     keyFunctions: ['Phase1InitializationDiscard', 'HalInitSystem(1)', 'IopInitializeBootDrivers', 'StartFirstUserProcess'],
     description: 'Запуск остальных процессоров (AP), PnP-менеджер инициализирует загрузочные драйверы, анимация Inbv, запуск первого пользовательского процесса smss.exe.'
   },
@@ -62,7 +64,7 @@ const stages: Stage[] = [
     title: '6. Session Manager Subsystem',
     subtitle: 'smss.exe (Master & Child Instances)',
     layer: 'Ring 3',
-    link: '/stages/06-smss',
+    link: base + 'stages/06-smss',
     keyFunctions: ['SmpInit', 'SmpCreatePagingFiles', 'SmpExecuteInitialCommand', 'SmpCreateSession'],
     description: 'Запуск autochk, создание файлов подкачки (pagefile.sys), создание Сессии 0 (wininit.exe, csrss.exe) и Сессии 1 (winlogon.exe, csrss.exe).'
   },
@@ -71,7 +73,7 @@ const stages: Stage[] = [
     title: '7. System Init & Services (Session 0)',
     subtitle: 'wininit.exe, services.exe, lsass.exe',
     layer: 'Ring 3',
-    link: '/stages/07-wininit-services',
+    link: base + 'stages/07-wininit-services',
     keyFunctions: ['WinMain', 'ScMain', 'ScStartService', 'LsaInitSystem'],
     description: 'Создание WinSta0, SCM запускает службы SYSTEM_START и AUTO_START, инициализация подсистемы безопасности LSA и диспетчера сессий LSM.'
   },
@@ -80,7 +82,7 @@ const stages: Stage[] = [
     title: '8. Logon, User Session & Shell',
     subtitle: 'winlogon.exe -> userinit.exe -> explorer.exe',
     layer: 'Ring 3',
-    link: '/stages/08-winlogon-explorer',
+    link: base + 'stages/08-winlogon-explorer',
     keyFunctions: ['WlInitialize', 'LogonUI.exe', 'Userinit', 'ExplorerWinMain'],
     description: 'Аутентификация пользователя через LogonUI/LSASS, загрузка реестра NTUSER.DAT, userinit запускает Shell (explorer.exe), создание панели задач и рабочего стола.'
   }

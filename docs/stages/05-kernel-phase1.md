@@ -11,19 +11,19 @@
                          │
                          ▼
 [ Phase1Initialization (0x140786170) -> Phase1InitializationDiscard (0x140A37B24) ]
-   ├── HalInitSystem(1, LoaderBlock) -> Запуск ядер CPU (<Term term="AP">AP</Term>), <Term term="IOMMU">IOMMU</Term>, <Term term="ACPI">ACPI</Term>
-   ├── InbvEnableBootDriver() -> Инициализация графического видеодрайвера <Term term="INBV">INBV</Term>
+   ├── HalInitSystem(1, LoaderBlock) -> Запуск ядер CPU (AP), IOMMU, ACPI
+   ├── InbvEnableBootDriver() -> Инициализация графического видеодрайвера INBV
    ├── CcInitializeCacheManager() -> Поднятие диспетчера кэша (Cc)
    ├── MmInitSystem(1) -> Рабочие наборы (Working Sets), кэш системного пространства
-   ├── CmInitSystem1() -> Монтирование веток реестра HKLM\<Term term="SAM">SAM</Term>, HKLM\SECURITY, HKLM\SOFTWARE
-   ├── PoInitSystem(1) -> Подсистема управления электропитанием (<Term term="ACPI">ACPI</Term> Power Schemes)
-   ├── IopInitializeBootDrivers() -> <Term term="PNP">PnP</Term>-диспетчер вызывает DriverEntry для загрузочных драйверов
+   ├── CmInitSystem1() -> Монтирование веток реестра HKLM\SAM, HKLM\SECURITY, HKLM\SOFTWARE
+   ├── PoInitSystem(1) -> Подсистема управления электропитанием (ACPI Power Schemes)
+   ├── IopInitializeBootDrivers() -> PnP-диспетчер вызывает DriverEntry для загрузочных драйверов
    └── StartFirstUserProcess (0x140A44218)
            │
            ├── Подготовка блока RTL_USER_PROCESS_INFORMATION
-           ├── Создание процесса \SystemRoot\System32\<Term term="SMSS">smss.exe</Term> (NtInitialUserProcess)
+           ├── Создание процесса \SystemRoot\System32\smss.exe (NtInitialUserProcess)
            ├── FinalizeBootLogo() -> Отключение анимации загрузки
-           └── ZwResumeThread() -> Передача управления в <Term term="SMSS">smss.exe</Term>
+           └── ZwResumeThread() -> Передача управления в smss.exe
 ```
 
 ---
