@@ -36,7 +36,7 @@ export default defineConfig({
     ],
     sidebar: [
       {
-        text: 'Архитектурный конвейер ядра (Boot)',
+        text: 'Архитектура ядра (Boot)',
         items: [
           { text: 'Обзор архитектуры NT', link: '/' },
           { text: '1. Firmware & Карта cold-boot', link: '/stages/01-firmware-uefi-mbr' },
